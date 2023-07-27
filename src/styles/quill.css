@@ -14,7 +14,8 @@
   min-height: 200px;
 }
 
-.ql-editor p {
+.ql-editor p,
+.ql-blank {
   @apply text-base !important;
 }
 
