@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build-analyze": "ANALYZE=true yarn build && next-chunk-labeler",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "patch-package"
@@ -39,7 +40,9 @@
     "typescript": "5.1.6"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^13.4.12",
     "@types/dompurify": "^3.0.2",
-    "@types/katex": "^0.16.1"
+    "@types/katex": "^0.16.1",
+    "next-chunk-labeler": "^1.0.0"
   }
 }

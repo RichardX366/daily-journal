@@ -11,7 +11,7 @@
 }
 
 .ql-editor {
-  min-height: 200px;
+  @apply min-h-[200px] md:min-h-[250px];
 }
 
 .ql-editor p,
