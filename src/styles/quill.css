@@ -1,0 +1,57 @@
+.quill {
+  @apply bg-slate-100 dark:bg-slate-900;
+}
+
+.ql-toolbar {
+  @apply rounded-t-md dark:border-gray-500 !important;
+}
+
+.ql-container {
+  @apply rounded-b-md dark:border-gray-500 !important;
+}
+
+.ql-editor {
+  min-height: 200px;
+}
+
+.ql-editor p {
+  @apply text-base !important;
+}
+
+.ql-editor h3 {
+  @apply text-lg !important;
+}
+
+.ql-editor h2 {
+  @apply text-2xl !important;
+}
+
+.ql-editor h1 {
+  @apply text-3xl !important;
+}
+
+#html .ql-formats button,
+#html .ql-picker,
+#html .ql-toolbar .ql-picker .ql-picker-label {
+  @apply dark:text-gray-300 text-black;
+}
+
+#html .ql-formats button.ql-active {
+  color: #06c;
+}
+
+.ql-picker-options {
+  @apply text-gray-700 !important;
+}
+
+.ql-stroke {
+  stroke: currentColor !important;
+}
+
+.ql-fill {
+  fill: currentColor !important;
+}
+
+.ql-editor.ql-blank::before {
+  @apply dark:text-gray-400;
+}

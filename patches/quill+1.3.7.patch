@@ -1,0 +1,13 @@
+diff --git a/node_modules/quill/dist/quill.js b/node_modules/quill/dist/quill.js
+index 811b3d0..efbc260 100644
+--- a/node_modules/quill/dist/quill.js
++++ b/node_modules/quill/dist/quill.js
+@@ -10836,7 +10836,7 @@ var Image = function (_Parchment$Embed) {
+   }, {
+     key: 'sanitize',
+     value: function sanitize(url) {
+-      return (0, _link.sanitize)(url, ['http', 'https', 'data']) ? url : '//:0';
++      return (0, _link.sanitize)(url, ['http', 'https', 'data', 'blob']) ? url : '//:0';
+     }
+   }, {
+     key: 'value',
