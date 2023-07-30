@@ -42,7 +42,7 @@ export const quillProps: ReactQuillProps = {
             const selection = t.quill.getSelection(true);
             const url = URL.createObjectURL(input.files[0]);
             t.quill.updateContents(
-              new (window as any).Delta()
+              new window.Delta()
                 .retain(selection.index)
                 .delete(selection.length)
                 .insert({ image: url }),
@@ -554,12 +554,12 @@ const Quill: React.FC<{ value: string; onChange: (value: string) => void }> = ({
   onChange,
 }) => {
   useEffect(() => {
-    if ((window as any).katex) return;
+    if (window.katex) return;
     import('katex').then((katex) => {
-      (window as any).katex = katex.default;
+      window.katex = katex.default;
     });
     import('quill-delta').then((Delta) => {
-      (window as any).Delta = Delta.default;
+      window.Delta = Delta.default;
     });
   }, []);
 

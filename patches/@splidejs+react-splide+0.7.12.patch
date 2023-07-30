@@ -1,0 +1,14 @@
+diff --git a/node_modules/@splidejs/react-splide/package.json b/node_modules/@splidejs/react-splide/package.json
+index 2ee7925..18b8b59 100644
+--- a/node_modules/@splidejs/react-splide/package.json
++++ b/node_modules/@splidejs/react-splide/package.json
+@@ -58,7 +58,8 @@
+     ".": {
+       "require": "./dist/js/react-splide.cjs.js",
+       "import": "./dist/js/react-splide.esm.js",
+-      "default": "./dist/js/react-splide.esm.js"
++      "default": "./dist/js/react-splide.esm.js",
++      "types": "./dist/types/index.d.ts"
+     },
+     "./css": "./dist/css/splide.min.css",
+     "./css/core": "./dist/css/splide-core.min.css",

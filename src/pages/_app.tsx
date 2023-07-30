@@ -2,6 +2,9 @@ import '@/styles/globals.css';
 import 'react-quill/dist/quill.snow.css';
 import '@/styles/quill.css';
 import 'katex/dist/katex.min.css';
+import '@/styles/mui.css';
+import '@/styles/splide.css';
+import '@splidejs/react-splide/css';
 import type { AppProps } from 'next/app';
 import { useEffect, useMemo, useState } from 'react';
 import { globalAccessToken, globalUser } from '@/helpers/state';
@@ -12,7 +15,7 @@ import { createState, useHookstate } from '@hookstate/core';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { clientId, scopes } from '@/helpers/constants';
-import GoogleIcon from '@mui/icons-material/Google';
+import { Google } from '@mui/icons-material';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
@@ -90,11 +93,7 @@ export default function App({ Component, pageProps }: AppProps) {
               </div>
             </button>
           ) : (
-            <Button
-              variant='contained'
-              startIcon={<GoogleIcon />}
-              onClick={logIn}
-            >
+            <Button variant='contained' startIcon={<Google />} onClick={logIn}>
               Log in
             </Button>
           )}
