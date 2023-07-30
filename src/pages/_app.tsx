@@ -9,7 +9,7 @@ import type { AppProps } from 'next/app';
 import { useEffect, useMemo, useState } from 'react';
 import { globalAccessToken, globalUser } from '@/helpers/state';
 import { Persistence } from '@hookstate/persistence';
-import { Button, ThemeProvider, useMediaQuery } from '@mui/material';
+import { Button, ThemeProvider } from '@mui/material';
 import getTheme from '@/helpers/theme';
 import { createState, useHookstate } from '@hookstate/core';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -20,14 +20,15 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { error, success } from '@/helpers/notification';
+import { useColorScheme } from '@mantine/hooks';
 
 const firstMount = createState(true);
 
 const LazyComponents = dynamic(import('@/components/GlobalLazyComponents'));
 
 export default function App({ Component, pageProps }: AppProps) {
-  const darkMode = useMediaQuery('(prefers-color-scheme: dark)');
-  const theme = useMemo(() => getTheme(darkMode), [darkMode]);
+  const colorScheme = useColorScheme();
+  const theme = useMemo(() => getTheme(colorScheme), [colorScheme]);
 
   const router = useRouter();
 
@@ -41,7 +42,7 @@ export default function App({ Component, pageProps }: AppProps) {
       ' ',
     )}&response_type=code&access_type=offline&include_granted_scopes=true&prompt=select_account`;
 
-    location.href = url;
+    router.push(url);
   };
 
   useEffect(() => {

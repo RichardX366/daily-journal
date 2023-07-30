@@ -6,6 +6,7 @@ import {
 } from '@/helpers/state';
 import { useHookstate } from '@hookstate/core';
 import { Alert, Button, Dialog, DialogContent, Snackbar } from '@mui/material';
+import { useRouter } from 'next/router';
 import React from 'react';
 
 interface Props {
@@ -19,6 +20,7 @@ const GlobalLazyComponents: React.FC<Props> = ({
 }) => {
   const error = useHookstate(errorState);
   const success = useHookstate(successState);
+  const router = useRouter();
 
   const logOut = () => {
     setShowProfileDialog(false);
@@ -33,9 +35,7 @@ const GlobalLazyComponents: React.FC<Props> = ({
       picture: '',
       refreshToken: '',
     });
-    if (location.pathname !== '/') {
-      location.pathname = '/';
-    }
+    router.push('/about');
   };
 
   const handleCloseError = (
@@ -86,7 +86,16 @@ const GlobalLazyComponents: React.FC<Props> = ({
         open={showProfileDialog}
         onClose={() => setShowProfileDialog(false)}
       >
-        <DialogContent>
+        <DialogContent className='flex flex-col gap-2'>
+          <Button
+            color='primary'
+            onClick={() => {
+              setShowProfileDialog(false);
+              router.push('/about');
+            }}
+          >
+            About
+          </Button>
           <Button color='error' onClick={logOut}>
             Log Out
           </Button>

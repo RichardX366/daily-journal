@@ -1,7 +1,7 @@
 import { createTheme } from '@mui/material';
 import type {} from '@mui/x-date-pickers/themeAugmentation';
 
-const getTheme = (darkMode: boolean) =>
+const getTheme = (colorScheme: 'dark' | 'light') =>
   createTheme({
     typography: {
       button: {
@@ -9,7 +9,7 @@ const getTheme = (darkMode: boolean) =>
       },
     },
     palette: {
-      mode: darkMode ? 'dark' : 'light',
+      mode: colorScheme,
     },
   });
 

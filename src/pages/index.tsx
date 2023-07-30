@@ -9,10 +9,11 @@ import dayjs, { Dayjs } from 'dayjs';
 import Quill from '@/components/Quill';
 import { Persistence } from '@hookstate/persistence';
 import MediaInput, { MediaFile } from '@/components/MediaInput';
-import { Splide, SplideSlide } from '@splidejs/react-splide';
 import { PlayArrow, ArrowBackIos, ArrowForwardIos } from '@mui/icons-material';
 import dynamic from 'next/dynamic';
 import { useHotkeys } from '@mantine/hooks';
+import { Splide, SplideSlide } from '@splidejs/react-splide';
+import { useRouter } from 'next/router';
 
 const Dialog = dynamic(import('@mui/material').then(({ Dialog }) => Dialog));
 const DialogContent = dynamic(
@@ -40,6 +41,7 @@ const Home: React.FC<{}> = () => {
     open: false,
     index: -1,
   });
+  const router = useRouter();
 
   const backMediaDialog = () => {
     const newIndex = (mediaDialog.index + files.length - 1) % files.length;
@@ -68,7 +70,7 @@ const Home: React.FC<{}> = () => {
 
   useEffect(() => {
     globalUser.attach(Persistence('user'));
-    if (!user.email.value) location.pathname = '/about';
+    if (!user.email.value) router.push('/about');
   }, [user]);
 
   return (
@@ -85,10 +87,23 @@ const Home: React.FC<{}> = () => {
             onChange={setDate}
           />
           <MediaInput label='Upload' multiple onChange={setFiles} />
+          <Button variant='contained'>Save</Button>
         </div>
         {files.length ? (
           <Splide
-            options={{ rewind: true, autoWidth: true, focus: 'center' }}
+            options={{
+              rewind: true,
+              autoWidth: true,
+              focus: 'center',
+              wheel: true,
+              start: 0,
+            }}
+            onMounted={(splide) =>
+              setTimeout(() => {
+                splide.go('>');
+                splide.go('<');
+              }, 50)
+            }
             aria-label='Media'
             className='md:px-16'
           >
@@ -122,7 +137,7 @@ const Home: React.FC<{}> = () => {
                   >
                     <video className='h-48 rounded-md' src={file.url} />
                     <div className='absolute inset-0 flex justify-center items-center'>
-                      <PlayArrow className='w-8 h-8 bg-black/30 rounded-full' />
+                      <PlayArrow className='w-8 h-8 bg-white/30 dark:bg-black/30 rounded-full' />
                     </div>
                   </div>
                 )}
@@ -138,7 +153,7 @@ const Home: React.FC<{}> = () => {
       >
         <DialogContent className='flex'>
           {mediaDialog.type === 'image' ? (
-            <img src={mediaDialog.url} alt='image' />
+            <img src={mediaDialog.url} alt='image' className='object-contain' />
           ) : (
             <video src={mediaDialog.url} controls autoPlay />
           )}
