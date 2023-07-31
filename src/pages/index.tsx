@@ -63,6 +63,14 @@ const Home: React.FC<{}> = () => {
     });
   };
 
+  const save = async () => {
+    const { data: result } = await a.post(`/drive/v3/files`, {
+      name: 'My Folder',
+      mimeType: 'application/vnd.google-apps.folder',
+    });
+    console.log(result);
+  };
+
   useHotkeys([
     ['ArrowLeft', () => mediaDialog.open && backMediaDialog()],
     ['ArrowRight', () => mediaDialog.open && nextMediaDialog()],
@@ -87,7 +95,9 @@ const Home: React.FC<{}> = () => {
             onChange={setDate}
           />
           <MediaInput label='Upload' multiple onChange={setFiles} />
-          <Button variant='contained'>Save</Button>
+          <Button variant='contained' onClick={save}>
+            Save
+          </Button>
         </div>
         {files.length ? (
           <Splide

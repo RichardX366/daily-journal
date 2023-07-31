@@ -4,7 +4,11 @@ export const error = (err: any) => {
   const message =
     typeof err === 'string'
       ? err
-      : err?.response?.data || err?.message?.toString() || 'Error';
+      : (typeof err?.response?.data === 'object'
+          ? JSON.stringify(err?.response?.data)
+          : err?.response?.data) ||
+        err?.message?.toString() ||
+        'Error';
   errorState.set({ message, show: true });
 };
 

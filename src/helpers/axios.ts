@@ -3,7 +3,9 @@ import { globalAccessToken, globalUser } from './state';
 import { error } from './notification';
 import { clientId, clientSecret } from './constants';
 
-const a = axios.create();
+const a = axios.create({
+  baseURL: 'https://www.googleapis.com',
+});
 
 const refreshAccessToken = async () => {
   try {
@@ -45,6 +47,12 @@ a.interceptors.request.use(async (request) => {
   return request;
 });
 
-a.interceptors.response.use((response) => response, error);
+a.interceptors.response.use(
+  (response) => response,
+  (response) => {
+    error(response);
+    return {};
+  },
+);
 
 export default a;

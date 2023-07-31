@@ -8,7 +8,8 @@
     "build-analyze": "ANALYZE=true yarn build && next-chunk-labeler",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "postuninstall": "patch-package"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -31,6 +32,7 @@
     "dompurify": "^3.0.5",
     "eslint": "8.45.0",
     "eslint-config-next": "13.4.12",
+    "fflate": "^0.8.0",
     "gifsicle-wasm-browser": "^1.5.16",
     "heic2any": "^0.0.4",
     "katex": "^0.16.8",
