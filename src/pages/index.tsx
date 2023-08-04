@@ -5,7 +5,6 @@ import React, { useEffect, useState } from 'react';
 import a from '@/helpers/ky';
 import Quill from '@/components/Quill';
 import { Persistence } from '@hookstate/persistence';
-import MediaInput, { MediaFile } from '@/components/MediaInput';
 import {
   AiFillCaretRight,
   AiOutlineLeft,
@@ -14,7 +13,13 @@ import {
 import { useHotkeys } from '@mantine/hooks';
 import { Splide, SplideSlide } from '@splidejs/react-splide';
 import { useRouter } from 'next/router';
-import { dateInput, Input, Modal } from '@richardx/components';
+import {
+  dateInput,
+  Input,
+  Modal,
+  MediaInput,
+  MediaFile,
+} from '@richardx/components';
 
 interface MediaDialog {
   type: 'image' | 'video';
@@ -25,7 +30,7 @@ interface MediaDialog {
 
 const Home: React.FC<{}> = () => {
   const user = useHookstate(globalUser);
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState(dateInput(new Date()));
   const [text, setText] = useState('');
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [mediaDialog, setMediaDialog] = useState<MediaDialog>({
@@ -88,12 +93,19 @@ const Home: React.FC<{}> = () => {
           <div className='flex-1'>
             <Input
               label='Date of Entry'
-              type={'file' as any}
+              type='date'
               value={date}
               onChange={setDate}
             />
           </div>
-          <MediaInput label='Upload' multiple onChange={setFiles} />
+          <div className='flex-1'>
+            <MediaInput
+              label='Upload'
+              allowVideo
+              multiple
+              onChange={setFiles}
+            />
+          </div>
           <button className='btn btn-info' onClick={save}>
             Save
           </button>
@@ -172,11 +184,17 @@ const Home: React.FC<{}> = () => {
           </div>
         }
       >
-        {mediaDialog.type === 'image' ? (
-          <img src={mediaDialog.url} alt='image' className='object-contain' />
-        ) : (
-          <video src={mediaDialog.url} controls autoPlay />
-        )}
+        <div className='flex justify-center max-h-[calc(100vh-13rem)]'>
+          {mediaDialog.type === 'image' ? (
+            <img
+              src={mediaDialog.url}
+              alt='image'
+              className='object-contain max-h-[calc(100vh-13rem)]'
+            />
+          ) : (
+            <video src={mediaDialog.url} controls autoPlay />
+          )}
+        </div>
       </Modal>
     </>
   );

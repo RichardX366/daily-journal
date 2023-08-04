@@ -97,13 +97,16 @@ export default function App({ Component, pageProps }: AppProps) {
             </label>
             <ul
               tabIndex={0}
-              className='p-2 shadow-md shadow-black/50 dark:shadow-white/50 menu dropdown-content z-[1] bg-gray-900 rounded-md w-52'
+              className='p-2 border border-gray-300 dark:border-gray-500 shadow-md shadow-black/50 dark:shadow-white/50 menu dropdown-content bg-white dark:bg-gray-900 rounded-md w-52'
             >
               <li>
                 <Link href='/about'>About</Link>
               </li>
               <li>
-                <button className='text-red-500' onClick={logOut}>
+                <button
+                  className='text-red-500 hover:text-red-500 hover:dark:text-red-600'
+                  onClick={logOut}
+                >
                   Log Out
                 </button>
               </li>

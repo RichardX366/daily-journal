@@ -564,7 +564,9 @@ const Quill: React.FC<{ value: string; onChange: (value: string) => void }> = ({
   }, []);
 
   return (
-    <QuillNoSSRWrapper {...quillProps} value={value} onChange={onChange} />
+    <div className='shadow-md transition-shadow shadow-black/10 dark:shadow-white/20 hover:shadow-black/40 hover:dark:shadow-white/70'>
+      <QuillNoSSRWrapper {...quillProps} value={value} onChange={onChange} />
+    </div>
   );
 };
 

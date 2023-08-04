@@ -1758,14 +1758,17 @@
   resolved "https://registry.yarnpkg.com/@polka/url/-/url-1.0.0-next.21.tgz#5de5a2385a35309427f6011992b544514d559aa1"
   integrity sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==
 
-"@richardx/components@^0.2.3":
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/@richardx/components/-/components-0.2.3.tgz#f3015eb784da8cde580e408597ff56b68393c219"
-  integrity sha512-5I0CzyLu1xHuMA9U1JNpcXCOH4t3HWzOLFEqtym+At+uBtE18KPTNH8x7UUcc6qycGvhxPKCnbsg2JOmA1mOtA==
+"@richardx/components@^0.3.2":
+  version "0.3.2"
+  resolved "https://registry.yarnpkg.com/@richardx/components/-/components-0.3.2.tgz#5e688691a5bcae26a07c28efd33fb54a6f3e11f8"
+  integrity sha512-EIslfrG/9KdzgAA8P3tb9rFp6YWNOt77nvURIdzJWMuMmJ4SDoxJ0BaDAKYVf5tVkor0bxDeVRpIX/c8yCQeTw==
   dependencies:
     "@hookstate/core" "3"
     "@mantine/hooks" "^6.0.17"
+    compressorjs "^1.2.1"
     daisyui "^3.5.0"
+    gifsicle-wasm-browser "^1.5.16"
+    heic2any "^0.0.4"
     nanoid "^4.0.2"
     react-icons "^4.10.1"
     react-scripts "5.0.1"
