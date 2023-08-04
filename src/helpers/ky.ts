@@ -21,9 +21,12 @@ const a = ky.extend({
       },
     ],
     afterResponse: [
-      (request, options, response) => response,
       async (request, options, response) => {
-        error(await response.text());
+        if (!response.ok) {
+          error(await response.text());
+          return new Response();
+        }
+        return response;
       },
     ],
   },

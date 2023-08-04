@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import { useHookstate } from '@hookstate/core';
+import { createState, useHookstate } from '@hookstate/core';
 import { globalUser } from '@/helpers/state';
 import React, { useEffect, useState } from 'react';
 import a from '@/helpers/ky';
@@ -27,6 +27,8 @@ interface MediaDialog {
   open: boolean;
   index: number;
 }
+
+const firstMount = createState(true);
 
 const Home: React.FC<{}> = () => {
   const user = useHookstate(globalUser);
@@ -62,14 +64,30 @@ const Home: React.FC<{}> = () => {
   };
 
   const save = async () => {
+    var fileContent = 'Hello World'; // As a sample, upload a text file.
+    var file = new Blob([fileContent], { type: 'text/plain' });
+    var metadata = {
+      'name': 'sample-file-via-js', // Filename at Google Drive
+      'mimeType': 'text/plain', // mimeType at Google Drive
+    };
+
+    var form = new FormData();
+    form.append(
+      'metadata',
+      new Blob([JSON.stringify(metadata)], { type: 'application/json' }),
+    );
+    form.append('file', file);
+
     const result = await a
-      .post(`/drive/v3/files`, {
-        json: {
-          name: 'My Folder',
-          mimeType: 'application/vnd.google-apps.folder',
+      .post(`upload/drive/v3/files?uploadType=multipart&fields=id`, {
+        body: form,
+        headers: {
+          'Content-Type': 'multipart/form-data',
         },
       })
       .json();
+    // const result = await a.get('drive/v3/files').json<any>();
+    if (!result) return;
     console.log(result);
   };
 
@@ -79,9 +97,22 @@ const Home: React.FC<{}> = () => {
   ]);
 
   useEffect(() => {
-    globalUser.attach(Persistence('user'));
-    if (!user.email.value) router.push('/about');
-  }, [user]);
+    if (!firstMount.value) return;
+    firstMount.set(false);
+
+    const main = async () => {
+      globalUser.attach(Persistence('user'));
+      if (!user.email.value) router.push('/about');
+
+      const filesResult = await a.get('drive/v3/files').json<any>();
+      if (!filesResult) return;
+      if (!filesResult.files.length) {
+        // INIT
+      }
+    };
+
+    main();
+  }, []);
 
   return (
     <>

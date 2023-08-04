@@ -15,7 +15,13 @@ import { BsGoogle } from 'react-icons/bs';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import { Notifications, error, success } from '@richardx/components';
+import {
+  Notifications,
+  error,
+  info,
+  success,
+  warn,
+} from '@richardx/components';
 
 const firstMount = createState(true);
 
@@ -51,18 +57,22 @@ export default function App({ Component, pageProps }: AppProps) {
   };
 
   useEffect(() => {
-    globalUser.attach(Persistence('user'));
-    globalAccessToken.attach(Persistence('accessToken'));
-  }, []);
-
-  useEffect(() => {
     if (!firstMount.value) return;
     firstMount.set(false);
 
-    const initialError = new URLSearchParams(location.search).get('error');
+    globalUser.attach(Persistence('user'));
+    globalAccessToken.attach(Persistence('accessToken'));
+
+    const search = new URLSearchParams(location.search);
+
+    const initialError = search.get('error');
     if (initialError) error(initialError);
-    const initialSuccess = new URLSearchParams(location.search).get('success');
+    const initialSuccess = search.get('success');
     if (initialSuccess) success(initialSuccess);
+    const initialWarning = search.get('warning');
+    if (initialWarning) warn(initialWarning);
+    const initialInfo = search.get('info');
+    if (initialInfo) info(initialInfo);
   }, []);
 
   return (

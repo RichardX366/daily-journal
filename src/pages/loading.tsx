@@ -10,6 +10,7 @@ const Loading: React.FC = () => {
   const initialRun = async () => {
     const query = new URLSearchParams(location.search);
     const code = query.get('code');
+
     try {
       const { access_token, refresh_token, expires_in } = await ky
         .post('https://oauth2.googleapis.com/token', {
@@ -37,10 +38,10 @@ const Loading: React.FC = () => {
         picture,
         refreshToken: refresh_token,
       });
-      location.href = location.origin;
+      location.pathname = '';
     } catch (e: any) {
       const error = e?.response.data;
-      location.href = `${location.origin}?error=${error.error}: ${error.error_description}`;
+      location.href = `${location.origin}/about?error=${error.error}: ${error.error_description}`;
     }
   };
 
@@ -48,7 +49,8 @@ const Loading: React.FC = () => {
     const query = new URLSearchParams(location.search);
     if (!query.get('scope')?.includes('drive.file')) {
       location.href =
-        location.origin + '?error=You must allow the app to use Google Drive';
+        location.origin +
+        '/about?error=You must allow the app to use Google Drive';
       return;
     }
     if (!firstMount.value) return;
