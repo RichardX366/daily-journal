@@ -14,5 +14,6 @@ const nextConfig = {
     }
     return config;
   },
+  transpilePackages: ['@richardx/components'],
 };
 module.exports = nextConfig;

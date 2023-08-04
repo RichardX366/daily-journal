@@ -1,8 +1,8 @@
-import { PermMedia } from '@mui/icons-material';
+import { AiOutlineUpload } from 'react-icons/ai';
 import { useId } from '@mantine/hooks';
 import classNames from 'classnames';
 import React, { FC, useState } from 'react';
-import { formatFileSize } from '@/helpers/format';
+import { formatFileSize } from '@richardx/components';
 
 export interface FileInputProps {
   label?: string;
@@ -31,7 +31,7 @@ export const FileInput: FC<FileInputProps> = ({
   types,
   accept,
   onChange,
-  icon = PermMedia,
+  icon = AiOutlineUpload,
 }) => {
   const id = useId();
   const [fileName, setFileName] = useState<string | string[]>('');
@@ -96,12 +96,12 @@ export const FileInput: FC<FileInputProps> = ({
           )}
         >
           {label && (
-            <p className='absolute block text-xs dark:text-white/70 text-black/60 -top-3 left-2 clip-contain before:w-full before:h-full before:-z-10 before:fixed before:inset-0 before:bg-gradient-to-br before:dark:from-gray-800 before:dark:to-purple-950 before:from-blue-50 before:to-blue-200 p-1'>
+            <p className='absolute block text-xs dark:text-white/70 text-black/60 -top-3 left-2 clip-contain before:w-full before:h-full before:-z-50 before:fixed before:inset-0 before:bg-gradient-to-br before:dark:from-gray-800 before:dark:to-purple-950 before:from-blue-50 before:to-blue-200 p-1'>
               {label}
               <span className='text-red-500'>{required && ' *'}</span>
             </p>
           )}
-          <Icon className='w-5 text-gray-500 dark:text-white' />
+          <Icon className='w-5 h-5 text-gray-500 dark:text-white' />
           {(typeof fileName === 'string' ? (
             fileName
           ) : (

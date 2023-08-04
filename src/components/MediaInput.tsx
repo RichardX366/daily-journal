@@ -1,8 +1,7 @@
 import { FileInput, FileInputProps } from './FileInput';
 import React, { FC, useState } from 'react';
-import { error } from '@/helpers/notification';
 import type Compressor from 'compressorjs';
-import { formatFileSize } from '@/helpers/format';
+import { formatFileSize, error } from '@richardx/components';
 
 export interface MediaFile {
   blob: Blob;

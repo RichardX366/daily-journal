@@ -2,38 +2,26 @@ import '@/styles/globals.css';
 import 'react-quill/dist/quill.snow.css';
 import '@/styles/quill.css';
 import 'katex/dist/katex.min.css';
-import '@/styles/mui.css';
 import '@/styles/splide.css';
 import '@splidejs/react-splide/css';
 import type { AppProps } from 'next/app';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect } from 'react';
 import { globalAccessToken, globalUser } from '@/helpers/state';
 import { Persistence } from '@hookstate/persistence';
-import { Button, ThemeProvider } from '@mui/material';
-import getTheme from '@/helpers/theme';
 import { createState, useHookstate } from '@hookstate/core';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { clientId, scopes } from '@/helpers/constants';
-import { Google } from '@mui/icons-material';
+import { BsGoogle } from 'react-icons/bs';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import dynamic from 'next/dynamic';
-import { error, success } from '@/helpers/notification';
-import { useColorScheme } from '@mantine/hooks';
+import Link from 'next/link';
+import { Notifications, error, success } from '@richardx/components';
 
 const firstMount = createState(true);
 
-const LazyComponents = dynamic(import('@/components/GlobalLazyComponents'));
-
 export default function App({ Component, pageProps }: AppProps) {
-  const colorScheme = useColorScheme();
-  const theme = useMemo(() => getTheme(colorScheme), [colorScheme]);
-
   const router = useRouter();
 
   const user = useHookstate(globalUser);
-  const [showProfileDialog, setShowProfileDialog] = useState(false);
 
   const logIn = () => {
     const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${
@@ -43,6 +31,22 @@ export default function App({ Component, pageProps }: AppProps) {
     )}&response_type=code&access_type=offline&include_granted_scopes=true&prompt=select_account`;
 
     router.push(url);
+  };
+
+  const logOut = () => {
+    fetch(
+      `https://oauth2.googleapis.com/revoke?token=${globalUser.refreshToken.value}`,
+      { method: 'POST' },
+    );
+    globalAccessToken.set({ token: '', expiresAt: 0 });
+    globalUser.set({
+      name: '',
+      email: '',
+      picture: '',
+      refreshToken: '',
+    });
+
+    router.push('/about');
   };
 
   useEffect(() => {
@@ -61,25 +65,22 @@ export default function App({ Component, pageProps }: AppProps) {
   }, []);
 
   return (
-    <ThemeProvider theme={theme}>
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <Head>
-          <meta
-            name='description'
-            content='An app that lets you keep a daily journal of your life stored on Google Drive.'
-          />
-        </Head>
-        <div className='fixed z-10 left-0 top-0 w-full p-4 dark:bg-slate-900 bg-slate-300 border-b dark:border-b-slate-500 border-b-slate-900 flex justify-between gap-2 items-center h-20'>
-          <h2
-            className='text-xl cursor-pointer whitespace-nowrap'
-            onClick={() => router.push('/')}
-          >
-            Daily Journal
-          </h2>
-          {user.email.value ? (
-            <button
-              onClick={() => setShowProfileDialog(true)}
-              className='p-2 rounded-md flex gap-2 items-center cursor-pointer bg-transparent text-left hover:bg-black/10 hover:dark:bg-white/10 transition-colors'
+    <>
+      <Head>
+        <meta
+          name='description'
+          content='An app that lets you keep a daily journal of your life stored on Google Drive.'
+        />
+      </Head>
+      <div className='fixed z-10 left-0 top-0 w-full p-4 dark:bg-slate-900 bg-slate-300 border-b dark:border-b-slate-500 border-b-slate-900 flex justify-between gap-2 items-center h-20'>
+        <Link href='/' className='text-xl whitespace-nowrap'>
+          Daily Journal
+        </Link>
+        {user.email.value ? (
+          <div className='dropdown dropdown-end'>
+            <label
+              tabIndex={0}
+              className='p-2 select-none rounded-md flex gap-2 items-center cursor-pointer bg-transparent text-left hover:bg-black/10 hover:dark:bg-white/10 transition-colors'
             >
               <img
                 alt='Profile'
@@ -92,21 +93,32 @@ export default function App({ Component, pageProps }: AppProps) {
                   {user.email.value}
                 </p>
               </div>
-            </button>
-          ) : (
-            <Button variant='contained' startIcon={<Google />} onClick={logIn}>
-              Log in
-            </Button>
-          )}
-        </div>
-        <main className='pt-20'>
-          <Component {...pageProps} />
-        </main>
-        <LazyComponents
-          setShowProfileDialog={setShowProfileDialog}
-          showProfileDialog={showProfileDialog}
-        />
-      </LocalizationProvider>
-    </ThemeProvider>
+            </label>
+            <ul
+              tabIndex={0}
+              className='p-2 shadow-md shadow-black/50 dark:shadow-white/50 menu dropdown-content z-[1] bg-gray-900 rounded-md w-52'
+            >
+              <li>
+                <Link href='/about'>About</Link>
+              </li>
+              <li>
+                <button className='text-red-500' onClick={logOut}>
+                  Log Out
+                </button>
+              </li>
+            </ul>
+          </div>
+        ) : (
+          <button className='btn btn-info' onClick={logIn}>
+            <BsGoogle />
+            Log in
+          </button>
+        )}
+      </div>
+      <main className='pt-20'>
+        <Component {...pageProps} />
+      </main>
+      <Notifications />
+    </>
   );
 }

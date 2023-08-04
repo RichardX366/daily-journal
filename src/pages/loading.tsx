@@ -1,7 +1,6 @@
 import { createState } from '@hookstate/core';
-import { CircularProgress } from '@mui/material';
 import React, { useEffect } from 'react';
-import axios from 'axios';
+import ky from 'ky';
 import { clientId, clientSecret } from '@/helpers/constants';
 import { globalAccessToken, globalUser } from '@/helpers/state';
 
@@ -12,24 +11,26 @@ const Loading: React.FC = () => {
     const query = new URLSearchParams(location.search);
     const code = query.get('code');
     try {
-      const {
-        data: { access_token, refresh_token, expires_in },
-      } = await axios.post('https://oauth2.googleapis.com/token', {
-        client_id: clientId,
-        client_secret: clientSecret,
-        code,
-        grant_type: 'authorization_code',
-        redirect_uri: location.origin + '/loading',
-      });
+      const { access_token, refresh_token, expires_in } = await ky
+        .post('https://oauth2.googleapis.com/token', {
+          json: {
+            client_id: clientId,
+            client_secret: clientSecret,
+            code,
+            grant_type: 'authorization_code',
+            redirect_uri: location.origin + '/loading',
+          },
+        })
+        .json<any>();
       globalAccessToken.set({
         token: access_token,
         expiresAt: Date.now() + expires_in * 1000,
       });
-      const {
-        data: { email, name, picture },
-      } = await axios.get(
-        `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${access_token}`,
-      );
+      const { email, name, picture } = await ky
+        .get(
+          `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${access_token}`,
+        )
+        .json<any>();
       globalUser.set({
         name,
         email,
@@ -58,7 +59,7 @@ const Loading: React.FC = () => {
   return (
     <main>
       <div className='w-full h-full absolute left-0 top-0 flex items-center justify-center flex-col gap-4'>
-        <CircularProgress color='primary' />
+        <span className='loading loading-spinner' />
         <p>Logging you in</p>
       </div>
     </main>
