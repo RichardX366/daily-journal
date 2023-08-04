@@ -1,4 +1,5 @@
 import '@/styles/globals.css';
+import '@richardx/components/dist/styles.css';
 import 'react-quill/dist/quill.snow.css';
 import '@/styles/quill.css';
 import 'katex/dist/katex.min.css';

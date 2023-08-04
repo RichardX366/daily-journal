@@ -25,7 +25,7 @@ interface MediaDialog {
 
 const Home: React.FC<{}> = () => {
   const user = useHookstate(globalUser);
-  const [date, setDate] = useState(dateInput(new Date()));
+  const [date, setDate] = useState('');
   const [text, setText] = useState('');
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [mediaDialog, setMediaDialog] = useState<MediaDialog>({
@@ -88,7 +88,7 @@ const Home: React.FC<{}> = () => {
           <div className='flex-1'>
             <Input
               label='Date of Entry'
-              type='date'
+              type={'file' as any}
               value={date}
               onChange={setDate}
             />
