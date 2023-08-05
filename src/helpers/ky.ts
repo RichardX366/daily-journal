@@ -50,8 +50,8 @@ const refreshAccessToken = async () => {
       expiresAt: Date.now() + expires_in * 1000,
     });
   } catch (e: any) {
-    const err = e?.response.data;
-    if (err.error === 'invalid_grant') {
+    const err = await e?.text();
+    if (err?.error === 'invalid_grant') {
       globalUser.set({
         email: '',
         name: '',

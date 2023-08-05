@@ -1,8 +1,7 @@
 import Head from 'next/head';
-import { createState, useHookstate } from '@hookstate/core';
-import { globalAccessToken, globalTemplate, globalUser } from '@/helpers/state';
+import { useHookstate } from '@hookstate/core';
+import { globalTemplate, globalUser } from '@/helpers/state';
 import React, { useEffect, useState } from 'react';
-import a from '@/helpers/ky';
 import Quill from '@/components/Quill';
 import { Persistence } from '@hookstate/persistence';
 import {
@@ -20,7 +19,8 @@ import {
   MediaInput,
   MediaFile,
 } from '@richardx/components';
-import { uploadFile } from '@/helpers/drive';
+import { searchFiles, uploadFile } from '@/helpers/drive';
+import { folderMimeType } from '@/helpers/constants';
 
 interface MediaDialog {
   type: 'image' | 'video';
@@ -28,8 +28,6 @@ interface MediaDialog {
   open: boolean;
   index: number;
 }
-
-const firstMount = createState(true);
 
 const Home: React.FC<{}> = () => {
   const user = useHookstate(globalUser);
@@ -79,15 +77,18 @@ const Home: React.FC<{}> = () => {
   ]);
 
   useEffect(() => {
-    if (!firstMount.value) return;
-    firstMount.set(false);
-    console.log('first Mount');
-
     globalUser.attach(Persistence('user'));
     if (!user.email.value) router.push('/about');
     globalTemplate.attach(Persistence('template'));
-
     setText(globalTemplate.value);
+
+    (async () => {
+      const files = await searchFiles([
+        { name: date, mimeType: folderMimeType },
+      ]);
+      if (!files) return;
+      if (files.length) router.push('/entry/' + files[0].id);
+    })();
   }, []);
 
   return (
