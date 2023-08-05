@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { createState, useHookstate } from '@hookstate/core';
-import { globalUser } from '@/helpers/state';
+import { globalAccessToken, globalTemplate, globalUser } from '@/helpers/state';
 import React, { useEffect, useState } from 'react';
 import a from '@/helpers/ky';
 import Quill from '@/components/Quill';
@@ -20,6 +20,7 @@ import {
   MediaInput,
   MediaFile,
 } from '@richardx/components';
+import { uploadFile } from '@/helpers/drive';
 
 interface MediaDialog {
   type: 'image' | 'video';
@@ -64,29 +65,10 @@ const Home: React.FC<{}> = () => {
   };
 
   const save = async () => {
-    var fileContent = 'Hello World'; // As a sample, upload a text file.
-    var file = new Blob([fileContent], { type: 'text/plain' });
-    var metadata = {
-      'name': 'sample-file-via-js', // Filename at Google Drive
-      'mimeType': 'text/plain', // mimeType at Google Drive
-    };
-
-    var form = new FormData();
-    form.append(
-      'metadata',
-      new Blob([JSON.stringify(metadata)], { type: 'application/json' }),
+    const result = await uploadFile(
+      new Blob(['fileContent'], { type: 'text/plain' }),
+      'test.txt',
     );
-    form.append('file', file);
-
-    const result = await a
-      .post(`upload/drive/v3/files?uploadType=multipart&fields=id`, {
-        body: form,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
-      .json();
-    // const result = await a.get('drive/v3/files').json<any>();
     if (!result) return;
     console.log(result);
   };
@@ -99,19 +81,13 @@ const Home: React.FC<{}> = () => {
   useEffect(() => {
     if (!firstMount.value) return;
     firstMount.set(false);
+    console.log('first Mount');
 
-    const main = async () => {
-      globalUser.attach(Persistence('user'));
-      if (!user.email.value) router.push('/about');
+    globalUser.attach(Persistence('user'));
+    if (!user.email.value) router.push('/about');
+    globalTemplate.attach(Persistence('template'));
 
-      const filesResult = await a.get('drive/v3/files').json<any>();
-      if (!filesResult) return;
-      if (!filesResult.files.length) {
-        // INIT
-      }
-    };
-
-    main();
+    setText(globalTemplate.value);
   }, []);
 
   return (

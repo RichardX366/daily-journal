@@ -38,7 +38,7 @@ const Loading: React.FC = () => {
         picture,
         refreshToken: refresh_token,
       });
-      location.pathname = '';
+      location.href = location.origin;
     } catch (e: any) {
       const error = e?.response.data;
       location.href = `${location.origin}/about?error=${error.error}: ${error.error_description}`;

@@ -17,3 +17,7 @@ export const successState = createState({
   message: '',
   show: false,
 });
+
+export const globalImageIds = createState<string[]>([]);
+
+export const globalTemplate = createState('');

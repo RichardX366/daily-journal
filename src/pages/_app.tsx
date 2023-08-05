@@ -7,7 +7,12 @@ import '@/styles/splide.css';
 import '@splidejs/react-splide/css';
 import type { AppProps } from 'next/app';
 import { useEffect } from 'react';
-import { globalAccessToken, globalUser } from '@/helpers/state';
+import {
+  globalAccessToken,
+  globalImageIds,
+  globalTemplate,
+  globalUser,
+} from '@/helpers/state';
 import { Persistence } from '@hookstate/persistence';
 import { createState, useHookstate } from '@hookstate/core';
 import { clientId, scopes } from '@/helpers/constants';
@@ -22,6 +27,12 @@ import {
   success,
   warn,
 } from '@richardx/components';
+import {
+  fileListToMap,
+  getFile,
+  getRootFolderId,
+  searchFiles,
+} from '@/helpers/drive';
 
 const firstMount = createState(true);
 
@@ -62,6 +73,8 @@ export default function App({ Component, pageProps }: AppProps) {
 
     globalUser.attach(Persistence('user'));
     globalAccessToken.attach(Persistence('accessToken'));
+    globalImageIds.attach(Persistence('imageIds'));
+    globalTemplate.attach(Persistence('template'));
 
     const search = new URLSearchParams(location.search);
 
@@ -73,6 +86,23 @@ export default function App({ Component, pageProps }: AppProps) {
     if (initialWarning) warn(initialWarning);
     const initialInfo = search.get('info');
     if (initialInfo) info(initialInfo);
+
+    if (!user.email.value) return;
+    (async () => {
+      const files = await searchFiles([
+        { name: 'image-ids.json', mimeType: 'application/json' },
+        { name: 'template.html', mimeType: 'text/html' },
+      ]);
+      if (!files.length) return getRootFolderId();
+
+      const [imageIds, template] = await Promise.all([
+        getFile(fileListToMap(files)['image-ids.json']).json<any>(),
+        getFile(fileListToMap(files)['template.html']).text(),
+      ]);
+
+      globalImageIds.set(imageIds);
+      globalTemplate.set(template);
+    })();
   }, []);
 
   return (
