@@ -5,7 +5,7 @@ const HTMLDisplay: React.FC<{ children: string }> = ({ children }) => {
   return (
     <div className='ql-snow ql-container' style={{ borderStyle: 'none' }}>
       <div
-        className='ql-editor'
+        className='ql-editor html-display'
         dangerouslySetInnerHTML={{
           __html: sanitizeHTML(children),
         }}

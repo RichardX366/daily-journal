@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+button.btn {
+  @apply disabled:bg-gray-300 dark:disabled:bg-gray-900 disabled:text-black/30 dark:disabled:text-white/30 disabled:cursor-not-allowed;
+}
+
+@keyframes skeleton {
+  from {
+    background-opacity: 0.5;
+  }
+  to {
+    background-opacity: 0.1;
+  }
+}
+
+.skeleton {
+  animation: skeleton 1s ease-in-out infinite alternate;
+  @apply bg-gray-500/30 rounded-md;
+}

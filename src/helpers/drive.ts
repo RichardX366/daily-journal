@@ -1,22 +1,50 @@
 import { folderMimeType } from './constants';
 import a from './ky';
 
+export interface FileMetadata {
+  id: string;
+  name: string;
+  description: string;
+  mimeType: string;
+  starred: boolean;
+}
+
 export const searchFiles = async (
-  matches: { name?: string; mimeType?: string }[],
+  matches: {
+    name?: string | { contains: string };
+    mimeType?: string;
+    query?: string;
+    parent?: string;
+    starred?: boolean;
+  }[],
 ) => {
   const query = encodeURIComponent(
-    matches
+    `(${matches
       .map(
-        (file) =>
-          `(${Object.entries(file)
-            .map(([key, value]) => `${key}='${value}'`)
+        ({ name, mimeType, parent, starred, query }) =>
+          `(${[
+            name
+              ? `name${typeof name === 'string' ? '=' : ' contains '}'${
+                  (name as any).contains || name
+                }'`
+              : null,
+            query ? `fullText contains '${query}'` : null,
+            mimeType ? `mimeType='${mimeType}'` : null,
+            parent ? `'${parent}' in parents` : null,
+            starred === undefined ? null : `starred=${starred}`,
+          ]
+            .filter(Boolean)
             .join(' and ')})`,
       )
-      .join(' or '),
+      .join(' or ')}) and trashed=false`,
   );
-  const files = await a.get(`drive/v3/files?q=${query}`).json<any>();
+  const files = await a
+    .get(
+      `drive/v3/files?pageSize=1000&fields=files(id,name,mimeType,starred,description)&q=${query}`,
+    )
+    .json<any>();
   if (!files) return;
-  return files.files;
+  return files.files as FileMetadata[];
 };
 
 export const getRootFolderId = async () => {
@@ -52,7 +80,15 @@ export const getRootFolderId = async () => {
   }
 };
 
-export const createFolder = async (name: string, parent?: string) => {
+export const createFolder = async ({
+  name,
+  parent,
+  description,
+}: {
+  name: string;
+  description?: string;
+  parent?: string;
+}) => {
   if (!parent) {
     parent = await getRootFolderId();
     if (!parent) return;
@@ -62,6 +98,7 @@ export const createFolder = async (name: string, parent?: string) => {
       json: {
         name,
         mimeType: folderMimeType,
+        description,
         parents: [parent],
       },
     })
@@ -102,7 +139,51 @@ export const uploadFile = async (file: Blob, name: string, parent?: string) => {
   return result.id as string;
 };
 
+export const updateFile = async (
+  id: string,
+  newContent: Blob,
+  newMetadata?: Partial<Omit<FileMetadata, 'id'>>,
+) => {
+  const form = new FormData();
+  form.append(
+    'metadata',
+    new Blob([JSON.stringify(newMetadata || {})], { type: 'application/json' }),
+  );
+  form.append('file', newContent);
+
+  const result = await a
+    .patch(`upload/drive/v3/files/${id}?uploadType=multipart&fields=id`, {
+      body: form,
+    })
+    .json<any>();
+  if (!result) return;
+
+  return result.id as string;
+};
+
+export const updateFileMetadata = async (
+  id: string,
+  metadata: Partial<Omit<FileMetadata, 'id'>>,
+) => {
+  const result = await a
+    .patch(`drive/v3/files/${id}`, {
+      json: metadata,
+    })
+    .json<any>();
+  if (!result) return;
+  return result.id as string;
+};
+
+export const deleteFile = async (id: string) => {
+  const result = await a.delete(`drive/v3/files/${id}`);
+  if (!result.ok) return;
+  return true;
+};
+
 export const fileListToMap = (files: { id: string; name: string }[]) =>
   Object.fromEntries(files.map(({ id, name }) => [name, id]));
 
 export const getFile = (id: string) => a.get(`drive/v3/files/${id}?alt=media`);
+
+export const idToUrl = (id: string) =>
+  `https://drive.google.com/uc?id=${id}&export=download`;

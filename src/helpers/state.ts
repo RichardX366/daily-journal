@@ -21,3 +21,12 @@ export const successState = createState({
 export const globalImageIds = createState<string[]>([]);
 
 export const globalTemplate = createState('');
+
+export const globalImageScale = createState({
+  show: false,
+  url: '',
+  width: 300,
+  name: 'photo',
+  // [width, name]
+  onSubmit(response: [number | undefined, string]) {},
+});

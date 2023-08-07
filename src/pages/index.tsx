@@ -1,209 +1,203 @@
 import Head from 'next/head';
-import { useHookstate } from '@hookstate/core';
 import { globalTemplate, globalUser } from '@/helpers/state';
 import React, { useEffect, useState } from 'react';
 import Quill from '@/components/Quill';
 import { Persistence } from '@hookstate/persistence';
-import {
-  AiFillCaretRight,
-  AiOutlineLeft,
-  AiOutlineRight,
-} from 'react-icons/ai';
-import { useHotkeys } from '@mantine/hooks';
-import { Splide, SplideSlide } from '@splidejs/react-splide';
 import { useRouter } from 'next/router';
 import {
   dateInput,
   Input,
-  Modal,
   MediaInput,
   MediaFile,
+  error,
 } from '@richardx/components';
-import { searchFiles, uploadFile } from '@/helpers/drive';
+import {
+  createFolder,
+  idToUrl,
+  searchFiles,
+  uploadFile,
+} from '@/helpers/drive';
 import { folderMimeType } from '@/helpers/constants';
-
-interface MediaDialog {
-  type: 'image' | 'video';
-  url: string;
-  open: boolean;
-  index: number;
-}
+import { AiOutlineInfoCircle } from 'react-icons/ai';
+import MediaDialog, { MediaDialogState } from '@/components/MediaDialog';
+import MediaSlideshow from '@/components/MediaSlideshow';
 
 const Home: React.FC<{}> = () => {
-  const user = useHookstate(globalUser);
   const [date, setDate] = useState(dateInput(new Date()));
   const [text, setText] = useState('');
+  const [title, setTitle] = useState('');
   const [files, setFiles] = useState<MediaFile[]>([]);
-  const [mediaDialog, setMediaDialog] = useState<MediaDialog>({
-    type: 'image',
-    url: '',
+  const [mediaDialog, setMediaDialog] = useState<MediaDialogState>({
     open: false,
     index: -1,
   });
+  const [saving, setSaving] = useState(false);
+  const [existingEntry, setExistingEntry] = useState(false);
+  const [showExistingEntry, setShowExistingEntry] = useState(false);
   const router = useRouter();
 
-  const backMediaDialog = () => {
-    const newIndex = (mediaDialog.index + files.length - 1) % files.length;
-    setMediaDialog({
-      open: true,
-      type: files[newIndex].blob.type.includes('image') ? 'image' : 'video',
-      index: newIndex,
-      url: files[newIndex].url,
-    });
-  };
-
-  const nextMediaDialog = () => {
-    const newIndex = (mediaDialog.index + 1) % files.length;
-    setMediaDialog({
-      open: true,
-      type: files[newIndex].blob.type.includes('image') ? 'image' : 'video',
-      index: newIndex,
-      url: files[newIndex].url,
-    });
-  };
-
   const save = async () => {
-    const result = await uploadFile(
-      new Blob(['fileContent'], { type: 'text/plain' }),
-      'test.txt',
-    );
-    if (!result) return;
-    console.log(result);
-  };
+    if (!text) return error('You need to have something in your journal entry');
+    setSaving(true);
 
-  useHotkeys([
-    ['ArrowLeft', () => mediaDialog.open && backMediaDialog()],
-    ['ArrowRight', () => mediaDialog.open && nextMediaDialog()],
-  ]);
+    const dateFolder = await createFolder({ name: date, description: title });
+    if (!dateFolder) return setSaving(false);
+
+    const handleMain = async () => {
+      const images: HTMLImageElement[] = Array.from(
+        document.querySelectorAll('.ql-editor img'),
+      );
+      const imageIds = await Promise.all(
+        images.map(async ({ src, alt }) =>
+          uploadFile(
+            await fetch(src).then((res) => res.blob()),
+            `${date}-${alt}`,
+            dateFolder,
+          ),
+        ),
+      );
+      if (imageIds.find((id) => !id)) return;
+
+      const newText = images.reduce((previousText, { src, alt }, i) => {
+        const id = imageIds[i] as string;
+        return previousText.replace(src, idToUrl(id)).replace(alt, id);
+      }, text);
+
+      const entry = await uploadFile(
+        new Blob([newText], { type: 'text/html' }),
+        date,
+        dateFolder,
+      );
+      return entry;
+    };
+    const handleGallery = async () => {
+      const uploads = await Promise.all(
+        files.map(({ blob }) =>
+          uploadFile(blob, date + '-gallery', dateFolder),
+        ),
+      );
+      if (uploads.find((id) => !id)) return;
+      return true;
+    };
+
+    const results = await Promise.all([handleMain(), handleGallery()]);
+    if (results.find((result) => !result)) return setSaving(false);
+    router.push('/entry/' + date);
+  };
 
   useEffect(() => {
     globalUser.attach(Persistence('user'));
-    if (!user.email.value) router.push('/about');
+    if (!globalUser.email.value) router.push('/about');
     globalTemplate.attach(Persistence('template'));
     setText(globalTemplate.value);
+  }, []);
+
+  useEffect(() => {
+    if (!date) return;
 
     (async () => {
       const files = await searchFiles([
         { name: date, mimeType: folderMimeType },
       ]);
       if (!files) return;
-      if (files.length) router.push('/entry/' + files[0].id);
+      if (files.length) {
+        setShowExistingEntry(true);
+        setExistingEntry(true);
+      } else {
+        setShowExistingEntry(false);
+        setExistingEntry(false);
+      }
     })();
-  }, []);
+  }, [date]);
 
   return (
     <>
       <Head>
         <title>Daily Journal</title>
       </Head>
-      <div className='p-4 pt-6 flex flex-col gap-4'>
-        <div className='flex flex-col md:flex-row gap-4'>
-          <div className='flex-1'>
-            <Input
-              label='Date of Entry'
-              type='date'
-              value={date}
-              onChange={setDate}
-            />
-          </div>
-          <div className='flex-1'>
-            <MediaInput
-              label='Upload'
-              allowVideo
-              multiple
-              onChange={setFiles}
-            />
-          </div>
-          <button className='btn btn-info' onClick={save}>
-            Save
-          </button>
+      <div className='flex flex-col md:flex-row gap-4'>
+        <div className='flex-1'>
+          <Input
+            label='Date of Entry'
+            type='date'
+            value={date}
+            onChange={setDate}
+            max={dateInput(new Date())}
+          />
         </div>
-        {files.length ? (
-          <Splide
-            options={{
-              rewind: true,
-              autoWidth: true,
-              focus: 'center',
-              wheel: true,
-              start: 0,
-            }}
-            onMounted={(splide) =>
-              setTimeout(() => {
-                splide.go('>');
-                splide.go('<');
-              }, 50)
-            }
-            aria-label='Media'
-            className='md:px-16'
-          >
-            {files.map((file, i) => (
-              <SplideSlide key={file.url} className='px-2'>
-                {file.blob.type.includes('image') ? (
-                  <img
-                    className='h-48 rounded-md cursor-pointer'
-                    src={file.url}
-                    alt='image'
-                    onClick={() =>
-                      setMediaDialog({
-                        open: true,
-                        type: 'image',
-                        url: file.url,
-                        index: i,
-                      })
-                    }
-                  />
-                ) : (
-                  <div
-                    className='relative cursor-pointer'
-                    onClick={() =>
-                      setMediaDialog({
-                        open: true,
-                        type: 'video',
-                        url: file.url,
-                        index: i,
-                      })
-                    }
-                  >
-                    <video className='h-48 rounded-md' src={file.url} />
-                    <div className='absolute inset-0 flex justify-center items-center'>
-                      <AiFillCaretRight className='w-8 h-8 bg-white/30 dark:bg-black/30 rounded-full' />
-                    </div>
-                  </div>
-                )}
-              </SplideSlide>
-            ))}
-          </Splide>
-        ) : null}
+        <div className='flex-1'>
+          <Input
+            label='Title'
+            value={title}
+            onChange={setTitle}
+            placeholder='Canada Trip Day 1'
+            disabled={existingEntry}
+          />
+        </div>
+        <div className='flex-1'>
+          <MediaInput
+            label='Upload'
+            allowVideo
+            multiple
+            onChange={setFiles}
+            disabled={existingEntry}
+          />
+        </div>
+        <button
+          className='btn btn-info'
+          onClick={save}
+          disabled={existingEntry || saving}
+        >
+          Save {saving && <span className='loading loading-spinner ml-2' />}
+        </button>
+      </div>
+      <MediaSlideshow
+        files={files.map(({ url, blob }) => ({
+          url,
+          type: blob.type.split('/')[0] as 'image',
+        }))}
+        setState={setMediaDialog}
+      />
+      <div className={existingEntry ? 'pointer-events-none' : ''}>
         <Quill value={text} onChange={setText} />
       </div>
-      <Modal
-        open={mediaDialog.open}
-        setOpen={(open) => setMediaDialog({ ...mediaDialog, open })}
-        actions={
-          <div className='flex justify-between w-full'>
-            <button className='btn btn-ghost' onClick={backMediaDialog}>
-              <AiOutlineLeft />
-              Back
-            </button>
-            <button className='btn btn-ghost' onClick={nextMediaDialog}>
-              Next
-              <AiOutlineRight />
-            </button>
-          </div>
-        }
+      <MediaDialog
+        state={mediaDialog}
+        setState={setMediaDialog}
+        files={files.map(({ url, blob }) => ({
+          url,
+          type: blob.type.split('/')[0] as 'image',
+        }))}
+      />
+      <div
+        className={`toast toast-start toast-top top-20 transition-opacity ${
+          showExistingEntry ? '' : 'opacity-0 pointer-events-none'
+        }`}
       >
-        <div className='flex justify-center max-h-[calc(100vh-13rem)]'>
-          {mediaDialog.type === 'image' ? (
-            <img
-              src={mediaDialog.url}
-              alt='image'
-              className='object-contain max-h-[calc(100vh-13rem)]'
-            />
-          ) : (
-            <video src={mediaDialog.url} controls autoPlay />
-          )}
+        <div className='alert'>
+          <div className='flex items-center gap-3'>
+            <div className='flex-1'>
+              <AiOutlineInfoCircle className='text-info w-5 h-5' />
+            </div>
+            <p className='dark:text-white whitespace-pre-wrap'>
+              You already have an entry for this date. Would you like to go to
+              it?
+            </p>
+          </div>
+          <button
+            className='btn btn-info btn-sm normal-case w-full'
+            onClick={() => router.push('/entry/' + date)}
+          >
+            Go to Entry
+          </button>
+          <button
+            className='btn btn-ghost btn-sm normal-case w-full'
+            onClick={() => setShowExistingEntry(false)}
+          >
+            Cancel
+          </button>
         </div>
-      </Modal>
+      </div>
     </>
   );
 };

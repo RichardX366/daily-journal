@@ -1,8 +1,10 @@
+import { globalImageScale } from '@/helpers/state';
+import { compressGif, compressImage, convertHeic } from '@richardx/components';
 import dynamic from 'next/dynamic';
 import React, { useEffect } from 'react';
 import type { ReactQuillProps } from 'react-quill';
 
-export const quillProps: ReactQuillProps = {
+const quillProps: ReactQuillProps = {
   theme: 'snow',
   placeholder: 'Write something awesome...',
   formats: [
@@ -31,25 +33,52 @@ export const quillProps: ReactQuillProps = {
       handlers: {
         image: function () {
           const t = this as any;
+          const index = t.quill.getSelection(true).index;
           const input = document.createElement('input');
           input.setAttribute('type', 'file');
-          input.setAttribute(
-            'accept',
-            'image/png, image/gif, image/jpeg, image/bmp, image/x-icon',
-          );
-          input.addEventListener('change', () => {
+          input.setAttribute('accept', 'image/*,image/heic');
+          input.addEventListener('change', async () => {
             if (!input.files || !input.files[0]) return;
-            const selection = t.quill.getSelection(true);
-            const url = URL.createObjectURL(input.files[0]);
-            t.quill.updateContents(
-              new window.Delta()
-                .retain(selection.index)
-                .delete(selection.length)
-                .insert({ image: url }),
-              'user',
-            );
-            t.quill.setSelection(selection.index + 1);
-            input.remove();
+            const [[width, name], url] = await Promise.all([
+              new Promise<[number | undefined, string]>((res) =>
+                globalImageScale.set({
+                  show: true,
+                  url: '',
+                  name: 'photo',
+                  width: 300,
+                  onSubmit: res,
+                }),
+              ),
+              (async () => {
+                const oldFile = (input.files as FileList)[0];
+                let newFile: Blob;
+                if (oldFile.type === 'image/heic') {
+                  newFile = await compressImage(await convertHeic(oldFile));
+                } else if (oldFile.type === 'image/gif') {
+                  newFile = await compressGif(oldFile);
+                } else if (oldFile.type.includes('image')) {
+                  newFile = await compressImage(oldFile);
+                } else return;
+                if (newFile.size > oldFile.size) newFile = oldFile;
+
+                const url = URL.createObjectURL(newFile);
+                globalImageScale.url.set(url);
+                input.remove();
+                return url;
+              })(),
+            ]);
+
+            if (!url) return;
+            if (!width) return URL.revokeObjectURL(url);
+
+            t.quill.insertEmbed(index, 'image', url, 'user');
+            const img: HTMLImageElement = t.quill.getLeaf(index + 1)[0].domNode;
+            img.alt = name;
+            img.style.width = `${width}px`;
+            img.style.height = `${Math.floor(
+              (img.naturalHeight * width) / img.naturalWidth,
+            )}px`;
+            t.quill.setSelection(index + 1);
           });
           input.click();
         },
@@ -557,9 +586,6 @@ const Quill: React.FC<{ value: string; onChange: (value: string) => void }> = ({
     if (window.katex) return;
     import('katex').then((katex) => {
       window.katex = katex.default;
-    });
-    import('quill-delta').then((Delta) => {
-      window.Delta = Delta.default;
     });
   }, []);
 
