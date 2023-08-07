@@ -23,6 +23,7 @@ const Loading: React.FC = () => {
           },
         })
         .json<any>();
+      console.log(access_token, refresh_token, expires_in);
       globalAccessToken.set({
         token: access_token,
         expiresAt: Date.now() + expires_in * 1000,
