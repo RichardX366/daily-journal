@@ -1758,10 +1758,10 @@
   resolved "https://registry.yarnpkg.com/@polka/url/-/url-1.0.0-next.21.tgz#5de5a2385a35309427f6011992b544514d559aa1"
   integrity sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==
 
-"@richardx/components@^0.3.15":
-  version "0.3.15"
-  resolved "https://registry.yarnpkg.com/@richardx/components/-/components-0.3.15.tgz#196c7277ca0c0f6791f39b34c666b7244ef2068e"
-  integrity sha512-DcBMt/Kod53WogWjsyoC8q27d50xdIdv0P8NTQaEk4XQo+1tMD8Lcq8sL32hcsPGmkUi7b5kqmQK5ldKRltNRQ==
+"@richardx/components@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@richardx/components/-/components-0.4.0.tgz#a5db42bbe09c8af6c8712fafa2bfdd5e30548da8"
+  integrity sha512-VTo9p32gYimWwZOAZi/5+Eguxv8ocWO9kW6zfoZBAfF/ib29Rofr51cK/M2F1tFLeVltqkXuZK9dzq4S/cyjug==
   dependencies:
     "@hookstate/core" "3"
     "@mantine/hooks" "^6.0.17"

@@ -173,7 +173,9 @@ const Entry: React.FC = () => {
   return (
     <>
       <Head>
-        <title>{`${date ? wordDate(date) : 'Entry'} | Daily Journal`}</title>
+        <title>{`Edit ${
+          date ? wordDate(date) : 'Entry'
+        } | Daily Journal`}</title>
       </Head>
       <div className='flex flex-col md:flex-row gap-4'>
         <div className='flex-1'>
