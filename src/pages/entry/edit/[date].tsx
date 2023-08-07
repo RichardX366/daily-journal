@@ -69,6 +69,7 @@ const Entry: React.FC = () => {
       const entry = await updateFile(
         htmlId,
         new Blob([newText], { type: 'text/html' }),
+        { description: title },
       );
       return entry;
     };

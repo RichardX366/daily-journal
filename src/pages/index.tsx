@@ -67,6 +67,7 @@ const Home: React.FC<{}> = () => {
         new Blob([newText], { type: 'text/html' }),
         date,
         dateFolder,
+        title,
       );
       return entry;
     };

@@ -9,24 +9,28 @@ export interface FileMetadata {
   starred: boolean;
 }
 
-export const searchFiles = async (
+const getQuery = (
   matches: {
-    name?: string | { contains: string };
+    name?: string | { contains: string } | { not: string };
     mimeType?: string;
-    query?: string;
     parent?: string;
     starred?: boolean;
+    query?: string;
   }[],
-) => {
-  const query = encodeURIComponent(
+) =>
+  encodeURIComponent(
     `(${matches
       .map(
         ({ name, mimeType, parent, starred, query }) =>
           `(${[
             name
-              ? `name${typeof name === 'string' ? '=' : ' contains '}'${
-                  (name as any).contains || name
-                }'`
+              ? `name${
+                  (name as any).contains
+                    ? ' contains '
+                    : (name as any).not
+                    ? '!='
+                    : '='
+                }'${(name as any).contains || (name as any).not || name}'`
               : null,
             query ? `fullText contains '${query}'` : null,
             mimeType ? `mimeType='${mimeType}'` : null,
@@ -38,9 +42,56 @@ export const searchFiles = async (
       )
       .join(' or ')}) and trashed=false`,
   );
+
+export const paginateFiles = async ({
+  matches,
+  pageToken,
+  order = 'descending',
+  pageSize = 30,
+}: {
+  matches?: {
+    name?: string | { contains: string } | { not: string };
+    mimeType?: string;
+    query?: string;
+    parent?: string;
+    starred?: boolean;
+  }[];
+  order?: 'ascending' | 'descending';
+  pageToken?: string;
+  pageSize?: number;
+}) => {
   const files = await a
     .get(
-      `drive/v3/files?pageSize=1000&fields=files(id,name,mimeType,starred,description)&q=${query}`,
+      `drive/v3/files?fields=nextPageToken,files(id,name,mimeType,starred,description)&pageSize=${pageSize}${
+        matches ? '&q=' + getQuery(matches) : ''
+      }${
+        matches?.find(({ query }) => query)
+          ? ''
+          : '&orderBy=name' + (order === 'ascending' ? '' : ' desc')
+      }${pageToken ? '&pageToken=' + pageToken : ''}`,
+    )
+    .json<any>();
+  if (!files) return;
+  return files as {
+    nextPageToken?: string;
+    files: FileMetadata[];
+  };
+};
+
+export const searchFiles = async (
+  matches: {
+    name?: string | { contains: string } | { not: string };
+    mimeType?: string;
+    query?: string;
+    parent?: string;
+    starred?: boolean;
+  }[],
+) => {
+  const files = await a
+    .get(
+      `drive/v3/files?pageSize=1000&fields=files(id,name,mimeType,starred,description)&q=${getQuery(
+        matches,
+      )}`,
     )
     .json<any>();
   if (!files) return;
@@ -107,7 +158,12 @@ export const createFolder = async ({
   return folder.id as string;
 };
 
-export const uploadFile = async (file: Blob, name: string, parent?: string) => {
+export const uploadFile = async (
+  file: Blob,
+  name: string,
+  parent?: string,
+  description?: string,
+) => {
   if (!parent) {
     parent = await getRootFolderId();
     if (!parent) return;
@@ -122,6 +178,7 @@ export const uploadFile = async (file: Blob, name: string, parent?: string) => {
           name,
           mimeType: file.type,
           parents: [parent],
+          description,
         }),
       ],
       { type: 'application/json' },
@@ -142,12 +199,12 @@ export const uploadFile = async (file: Blob, name: string, parent?: string) => {
 export const updateFile = async (
   id: string,
   newContent: Blob,
-  newMetadata?: Partial<Omit<FileMetadata, 'id'>>,
+  newMetadata: Partial<Omit<FileMetadata, 'id'>> = {},
 ) => {
   const form = new FormData();
   form.append(
     'metadata',
-    new Blob([JSON.stringify(newMetadata || {})], { type: 'application/json' }),
+    new Blob([JSON.stringify(newMetadata)], { type: 'application/json' }),
   );
   form.append('file', newContent);
 

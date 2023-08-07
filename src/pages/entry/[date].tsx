@@ -36,12 +36,19 @@ const Entry: React.FC = () => {
     index: -1,
   });
   const [folderId, setFolderId] = useState('');
+  const [htmlId, setHtmlId] = useState('');
   const [starred, setStarred] = useState(false);
 
   const swapStarred = async () => {
-    await updateFileMetadata(folderId, {
-      starred: !starred,
-    });
+    const results = await Promise.all([
+      updateFileMetadata(folderId, {
+        starred: !starred,
+      }),
+      updateFileMetadata(htmlId, {
+        starred: !starred,
+      }),
+    ]);
+    if (results.find((response) => !response)) return;
     setStarred(!starred);
   };
 
@@ -79,6 +86,7 @@ const Entry: React.FC = () => {
       const handleHtml = async () => {
         const htmlFile = files.find(({ mimeType }) => mimeType === 'text/html');
         if (!htmlFile) return;
+        setHtmlId(htmlFile.id);
         const html = await getFile(htmlFile.id).text();
         if (!html) return;
 

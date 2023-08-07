@@ -115,7 +115,7 @@ export default function App({ Component, pageProps }: AppProps) {
           content='An app that lets you keep a daily journal of your life stored on Google Drive.'
         />
       </Head>
-      <div className='fixed z-[1] left-0 top-0 w-full p-4 dark:bg-slate-900 bg-slate-300 border-b dark:border-b-slate-500 border-b-slate-900 flex justify-between gap-2 items-center h-20'>
+      <div className='fixed z-10 left-0 top-0 w-full p-4 dark:bg-slate-900 bg-slate-300 border-b dark:border-b-slate-500 border-b-slate-900 flex justify-between gap-2 items-center h-20'>
         <Link href='/' className='text-3xl whitespace-nowrap'>
           Daily Journal
         </Link>
@@ -142,13 +142,16 @@ export default function App({ Component, pageProps }: AppProps) {
               className='p-2 border border-gray-300 dark:border-gray-500 shadow-md shadow-black/50 dark:shadow-white/50 menu dropdown-content bg-white dark:bg-gray-900 rounded-md w-52'
             >
               <li>
+                <Link href='/about'>About</Link>
+              </li>
+              <li>
+                <Link href='/entries'>Entries</Link>
+              </li>
+              <li>
                 <Link href='/update-image-ids'>Update Image Ids</Link>
               </li>
               <li>
                 <Link href='/update-template'>Update Template</Link>
-              </li>
-              <li>
-                <Link href='/about'>About</Link>
               </li>
               <li>
                 <button
