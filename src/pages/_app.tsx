@@ -50,7 +50,7 @@ export default function App({ Component, pageProps }: AppProps) {
       location.origin
     }/loading&scope=${scopes.join(
       ' ',
-    )}&response_type=code&access_type=offline&include_granted_scopes=true&prompt=select_account`;
+    )}&response_type=code&access_type=offline&include_granted_scopes=true&prompt=consent`;
 
     router.push(url);
   };
