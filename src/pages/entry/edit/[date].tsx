@@ -2,7 +2,6 @@ import {
   FileMetadata,
   deleteFile,
   getFile,
-  idToUrl,
   searchFiles,
   updateFile,
   updateFileMetadata,
@@ -47,24 +46,20 @@ const Entry: React.FC = () => {
 
     const handleMain = async () => {
       const imageIds = await Promise.all(
-        images
-          .filter(({ src }) => src.includes('blob:'))
-          .map(async ({ src, alt }) =>
-            uploadFile(
-              await fetch(src).then((res) => res.blob()),
-              `${date}-${alt}`,
-              folderId,
-            ),
+        images.map(async ({ src, alt }) =>
+          uploadFile(
+            await fetch(src).then((res) => res.blob()),
+            `${date}-${alt}`,
+            folderId,
           ),
+        ),
       );
       if (imageIds.find((id) => !id)) return;
 
-      const newText = images
-        .filter(({ src }) => src.includes('blob:'))
-        .reduce((previousText, { src, alt }, i) => {
-          const id = imageIds[i] as string;
-          return previousText.replace(src, idToUrl(id)).replace(alt, id);
-        }, text);
+      const newText = images.reduce((previousText, { src }, i) => {
+        const id = imageIds[i] as string;
+        return previousText.replace(src, id);
+      }, text);
 
       const entry = await updateFile(
         htmlId,
@@ -95,8 +90,7 @@ const Entry: React.FC = () => {
         ({ mimeType, id }) =>
           mimeType !== folderMimeType &&
           mimeType !== 'text/html' &&
-          !gallery.find(({ driveId }) => driveId === id) &&
-          !images.find(({ src }) => src === idToUrl(id)),
+          !gallery.find(({ driveId }) => driveId === id),
       );
       const responses = await Promise.all(
         unusedFiles.map(({ id }) => deleteFile(id)),
@@ -140,7 +134,23 @@ const Entry: React.FC = () => {
         const html = await getFile(htmlFile.id).text();
         if (!html) return;
 
-        document.querySelector('.ql-editor')!.innerHTML = html;
+        const imagesInHtml = files.filter(
+          ({ name, mimeType }) =>
+            name !== date + '-gallery' &&
+            mimeType !== folderMimeType &&
+            mimeType !== 'text/html',
+        );
+        const urls = await Promise.all(
+          imagesInHtml.map(async ({ id }) => ({
+            id,
+            url: URL.createObjectURL(await getFile(id).blob()),
+          })),
+        );
+
+        document.querySelector('.ql-editor')!.innerHTML = urls.reduce(
+          (previousText, { id, url }) => previousText.replace(id, url),
+          html,
+        );
       };
 
       const handleGallery = async () => {
@@ -168,7 +178,10 @@ const Entry: React.FC = () => {
       await Promise.all([handleHtml(), handleGallery()]);
     })();
 
-    return () => gallery.forEach(({ url }) => URL.revokeObjectURL(url));
+    return () => {
+      gallery.forEach(({ url }) => URL.revokeObjectURL(url));
+      text.match(/blob:[^'"]+/g)?.forEach(URL.revokeObjectURL);
+    };
   }, [date]);
 
   return (

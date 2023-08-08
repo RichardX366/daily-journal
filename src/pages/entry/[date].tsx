@@ -1,6 +1,7 @@
 import {
   deleteFile,
   getFile,
+  paginateFiles,
   searchFiles,
   updateFileMetadata,
 } from '@/helpers/drive';
@@ -17,6 +18,7 @@ import MediaDialog, {
 } from '@/components/MediaDialog';
 import MediaSlideshow from '@/components/MediaSlideshow';
 import { folderMimeType } from '@/helpers/constants';
+import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 
 const HTMLDisplay = dynamic(() => import('@/components/HTMLDisplay'), {
   ssr: false,
@@ -38,6 +40,8 @@ const Entry: React.FC = () => {
   const [folderId, setFolderId] = useState('');
   const [htmlId, setHtmlId] = useState('');
   const [starred, setStarred] = useState(false);
+  const [backDate, setBackDate] = useState('');
+  const [nextDate, setNextDate] = useState('');
 
   const swapStarred = async () => {
     const results = await Promise.all([
@@ -67,11 +71,7 @@ const Entry: React.FC = () => {
     if (!globalUser.email.value) router.push('/about');
 
     (async () => {
-      const files = await searchFiles([
-        { name: date + '-gallery' },
-        { name: date, mimeType: 'text/html' },
-        { name: date, mimeType: folderMimeType },
-      ]);
+      const files = await searchFiles([{ name: { contains: date } }]);
       if (!files) return;
 
       const folder = files.find(({ mimeType }) => mimeType === folderMimeType);
@@ -90,7 +90,24 @@ const Entry: React.FC = () => {
         const html = await getFile(htmlFile.id).text();
         if (!html) return;
 
-        setText(html);
+        const imagesInHtml = files.filter(
+          ({ name, mimeType }) =>
+            name !== date + '-gallery' &&
+            mimeType !== folderMimeType &&
+            mimeType !== 'text/html',
+        );
+        const urls = await Promise.all(
+          imagesInHtml.map(async ({ id }) => ({
+            id,
+            url: URL.createObjectURL(await getFile(id).blob()),
+          })),
+        );
+        setText(
+          urls.reduce(
+            (previousText, { id, url }) => previousText.replace(id, url),
+            html,
+          ),
+        );
       };
 
       const handleGallery = async () => {
@@ -116,7 +133,46 @@ const Entry: React.FC = () => {
       await Promise.all([handleHtml(), handleGallery()]);
     })();
 
-    return () => gallery.forEach(({ url }) => URL.revokeObjectURL(url));
+    (async () => {
+      const year = +date.slice(0, 4);
+      const month = +date.slice(4, 6);
+      const nearestYear = month < 7 ? year - 1 : year + 1;
+      const nearbyDates = await paginateFiles({
+        matches: [
+          { mimeType: folderMimeType, name: { contains: year + '-' } },
+          { mimeType: folderMimeType, name: { contains: nearestYear + '-' } },
+        ],
+        order: 'ascending',
+        pageSize: 1000,
+      });
+      if (!nearbyDates) return;
+      while (nearbyDates.nextPageToken) {
+        const nextPage = await paginateFiles({
+          matches: [
+            { mimeType: folderMimeType, name: { contains: year + '-' } },
+            { mimeType: folderMimeType, name: { contains: nearestYear + '-' } },
+          ],
+          order: 'ascending',
+          pageToken: nearbyDates.nextPageToken,
+          pageSize: 1000,
+        });
+        if (!nextPage) return;
+        nearbyDates.files.push(...nextPage.files);
+        nearbyDates.nextPageToken = nextPage.nextPageToken;
+      }
+      console.log(nearbyDates.files);
+      const dateIndex = nearbyDates.files.findIndex(
+        ({ name }) => name === date,
+      );
+      if (dateIndex === -1) return;
+      setBackDate(nearbyDates.files[dateIndex - 1]?.name || '');
+      setNextDate(nearbyDates.files[dateIndex + 1]?.name || '');
+    })();
+
+    return () => {
+      gallery.forEach(({ url }) => URL.revokeObjectURL(url));
+      text.match(/blob:[^'"]+/g)?.forEach(URL.revokeObjectURL);
+    };
   }, [date]);
 
   return (
@@ -151,6 +207,24 @@ const Entry: React.FC = () => {
           >
             Delete
           </button>
+          <div className='flex gap-4'>
+            <button
+              className='btn btn-outline flex-1 md:w-24'
+              disabled={!backDate}
+              onClick={() => router.push('/entry/' + backDate)}
+            >
+              <AiOutlineLeft />
+              Back
+            </button>
+            <button
+              className='btn btn-outline flex-1 md:w-24'
+              disabled={!nextDate}
+              onClick={() => router.push('/entry/' + nextDate)}
+            >
+              Next
+              <AiOutlineRight />
+            </button>
+          </div>
         </div>
       </div>
       <MediaSlideshow files={gallery} setState={setMediaDialog} />

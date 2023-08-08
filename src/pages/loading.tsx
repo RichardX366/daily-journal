@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import ky from 'ky';
 import { clientId, clientSecret } from '@/helpers/constants';
 import { globalAccessToken, globalUser } from '@/helpers/state';
+import Head from 'next/head';
 
 const firstMount = createState(true);
 
@@ -59,12 +60,17 @@ const Loading: React.FC = () => {
   }, []);
 
   return (
-    <main>
-      <div className='w-full h-full absolute left-0 top-0 flex items-center justify-center flex-col gap-4'>
-        <span className='loading loading-spinner' />
-        <p>Logging you in</p>
-      </div>
-    </main>
+    <>
+      <Head>
+        <title>Loading | Daily Journal</title>
+      </Head>
+      <main>
+        <div className='w-full h-full absolute left-0 top-0 flex items-center justify-center flex-col gap-4'>
+          <span className='loading loading-spinner' />
+          <p>Logging you in</p>
+        </div>
+      </main>
+    </>
   );
 };
 

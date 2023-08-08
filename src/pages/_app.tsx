@@ -170,7 +170,11 @@ export default function App({ Component, pageProps }: AppProps) {
           </button>
         )}
       </div>
-      <main className='pt-24 p-4 flex flex-col gap-4'>
+      <main
+        className={`flex flex-col ${
+          router.pathname === '/about' ? 'pt-20' : 'pt-24 p-4 gap-4'
+        }`}
+      >
         <Component {...pageProps} />
       </main>
       <Modal

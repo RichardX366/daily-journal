@@ -11,12 +11,7 @@ import {
   MediaFile,
   error,
 } from '@richardx/components';
-import {
-  createFolder,
-  idToUrl,
-  searchFiles,
-  uploadFile,
-} from '@/helpers/drive';
+import { createFolder, searchFiles, uploadFile } from '@/helpers/drive';
 import { folderMimeType } from '@/helpers/constants';
 import { AiOutlineInfoCircle } from 'react-icons/ai';
 import MediaDialog, { MediaDialogState } from '@/components/MediaDialog';
@@ -60,7 +55,7 @@ const Home: React.FC<{}> = () => {
 
       const newText = images.reduce((previousText, { src, alt }, i) => {
         const id = imageIds[i] as string;
-        return previousText.replace(src, idToUrl(id)).replace(alt, id);
+        return previousText.replace(src, id);
       }, text);
 
       const entry = await uploadFile(

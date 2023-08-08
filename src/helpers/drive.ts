@@ -86,10 +86,15 @@ export const searchFiles = async (
     parent?: string;
     starred?: boolean;
   }[],
+  order: 'ascending' | 'descending' = 'descending',
 ) => {
   const files = await a
     .get(
-      `drive/v3/files?pageSize=1000&fields=files(id,name,mimeType,starred,description)&q=${getQuery(
+      `drive/v3/files?pageSize=1000${
+        matches?.find(({ query }) => query)
+          ? ''
+          : '&orderBy=name' + (order === 'ascending' ? '' : ' desc')
+      }&fields=files(id,name,mimeType,starred,description)&q=${getQuery(
         matches,
       )}`,
     )
@@ -241,6 +246,3 @@ export const fileListToMap = (files: { id: string; name: string }[]) =>
   Object.fromEntries(files.map(({ id, name }) => [name, id]));
 
 export const getFile = (id: string) => a.get(`drive/v3/files/${id}?alt=media`);
-
-export const idToUrl = (id: string) =>
-  `https://drive.google.com/uc?id=${id}&export=download`;
