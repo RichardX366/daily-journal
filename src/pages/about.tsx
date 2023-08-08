@@ -15,7 +15,8 @@ const About: React.FC = () => {
             Daily journal is an app that lets you log your day-to-day life in a
             quick and easy way. All your entries are stored on Google Drive, so
             however much your drive can store is however long you can journal
-            for. Navigate by clicking on your profile after logging in.
+            for. You can also look through compilations of images over time.
+            Navigate by clicking on your profile after logging in.
           </p>
         </div>
       </div>
