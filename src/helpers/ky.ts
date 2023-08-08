@@ -50,17 +50,14 @@ const refreshAccessToken = async () => {
       expiresAt: Date.now() + expires_in * 1000,
     });
   } catch (e: any) {
-    const err = await e?.text();
-    if (err?.error === 'invalid_grant') {
-      globalUser.set({
-        email: '',
-        name: '',
-        picture: '',
-        refreshToken: '',
-      });
-      globalAccessToken.set({ token: '', expiresAt: 0 });
-      location.href = location.origin + '?error=Please log in again';
-    }
+    globalUser.set({
+      email: '',
+      name: '',
+      picture: '',
+      refreshToken: '',
+    });
+    globalAccessToken.set({ token: '', expiresAt: 0 });
+    location.href = location.origin + '?error=Please log in again';
   }
 };
 

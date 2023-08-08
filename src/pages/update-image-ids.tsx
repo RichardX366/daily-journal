@@ -1,7 +1,7 @@
 import { searchFiles, updateFile } from '@/helpers/drive';
 import { globalImageIds, globalUser } from '@/helpers/state';
 import { Persistence } from '@hookstate/persistence';
-import { Input, Table } from '@richardx/components';
+import { Input, Table, error } from '@richardx/components';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -22,6 +22,15 @@ const UpdateImageIds: React.FC = () => {
     if (!result) return;
     globalImageIds.set(imageIds);
     router.push('/');
+  };
+
+  const addImageId = () => {
+    if (!imageId) return;
+    if (imageId === 'gallery' || imageId === 'photos') {
+      return error(`Sorry, you cannot use "${imageId}" as an ID`);
+    }
+    setImageIds([...imageIds, imageId]);
+    setImageId('');
   };
 
   useEffect(() => {
@@ -56,18 +65,9 @@ const UpdateImageIds: React.FC = () => {
           onChange={setImageId}
           label='Image ID'
           placeholder='me'
-          onEnter={() => {
-            setImageIds([...imageIds, imageId]);
-            setImageId('');
-          }}
+          onEnter={addImageId}
         />
-        <button
-          className='btn btn-success'
-          onClick={() => {
-            setImageIds([...imageIds, imageId]);
-            setImageId('');
-          }}
-        >
+        <button className='btn btn-success' onClick={addImageId}>
           Add
         </button>
       </div>

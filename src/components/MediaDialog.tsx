@@ -22,18 +22,16 @@ const MediaDialog: React.FC<{
   setFiles?: (v: MediaDialogFile[]) => void;
 }> = ({ state, setState, files, setFiles }) => {
   const backMediaDialog = () => {
-    const newIndex = (state.index + files.length - 1) % files.length;
     setState({
       open: true,
-      index: newIndex,
+      index: state.index - 1,
     });
   };
 
   const nextMediaDialog = () => {
-    const newIndex = (state.index + 1) % files.length;
     setState({
       open: true,
-      index: newIndex,
+      index: state.index + 1,
     });
   };
 
@@ -47,8 +45,11 @@ const MediaDialog: React.FC<{
   };
 
   useHotkeys([
-    ['ArrowLeft', () => state.open && backMediaDialog()],
-    ['ArrowRight', () => state.open && nextMediaDialog()],
+    ['ArrowLeft', () => state.open && state.index !== 0 && backMediaDialog()],
+    [
+      'ArrowRight',
+      () => state.open && state.index !== files.length - 1 && nextMediaDialog(),
+    ],
   ]);
 
   return (
@@ -57,7 +58,11 @@ const MediaDialog: React.FC<{
       setOpen={(open) => setState({ ...state, open })}
       actions={
         <div className='flex justify-between w-full'>
-          <button className='btn btn-ghost' onClick={backMediaDialog}>
+          <button
+            className='btn btn-ghost'
+            onClick={backMediaDialog}
+            disabled={state.index === 0}
+          >
             <AiOutlineLeft />
             Back
           </button>
@@ -66,7 +71,11 @@ const MediaDialog: React.FC<{
               Delete
             </button>
           )}
-          <button className='btn btn-ghost' onClick={nextMediaDialog}>
+          <button
+            className='btn btn-ghost'
+            onClick={nextMediaDialog}
+            disabled={state.index === files.length - 1}
+          >
             Next
             <AiOutlineRight />
           </button>

@@ -17,52 +17,27 @@ const Entries: React.FC = () => {
   const [nextPageToken, setNextPageToken] = useState('');
   const router = useRouter();
 
-  const loadMore = async () => {
+  const search = async (concat = false) => {
     const results = await paginateFiles({
+      matches: [
+        {
+          query: query || undefined,
+          starred: starred === 'undefined' ? undefined : JSON.parse(starred),
+          mimeType: method === 'title' ? folderMimeType : 'text/html',
+          name: { not: method === 'title' ? 'Daily Journal' : 'template.html' },
+        },
+      ],
+      order,
       pageToken: nextPageToken,
-      matches: [
-        {
-          query,
-          starred: starred === 'undefined' ? undefined : JSON.parse(starred),
-          mimeType: method === 'title' ? folderMimeType : 'text/html',
-          name: { not: method === 'title' ? 'Daily Journal' : 'template.html' },
-        },
-      ],
-      order,
     });
     if (!results) return;
-    setFiles(
-      files.concat(
-        results.files.map(({ name, description, starred }) => ({
-          title: description,
-          date: name,
-          starred,
-        })),
-      ),
-    );
-    setNextPageToken(results.nextPageToken || '');
-  };
 
-  const search = async () => {
-    const results = await paginateFiles({
-      matches: [
-        {
-          query,
-          starred: starred === 'undefined' ? undefined : JSON.parse(starred),
-          mimeType: method === 'title' ? folderMimeType : 'text/html',
-          name: { not: method === 'title' ? 'Daily Journal' : 'template.html' },
-        },
-      ],
-      order,
-    });
-    if (!results) return;
-    setFiles(
-      results.files.map(({ name, description, starred }) => ({
-        title: description,
-        date: name,
-        starred,
-      })),
-    );
+    const toAdd = results.files.map(({ name, description, starred }) => ({
+      title: description,
+      date: name,
+      starred,
+    }));
+    setFiles(concat ? files.concat(toAdd) : toAdd);
     setNextPageToken(results.nextPageToken || '');
   };
 
@@ -79,7 +54,7 @@ const Entries: React.FC = () => {
         <Input
           value={query}
           onChange={setQuery}
-          onEnter={search}
+          onEnter={() => search()}
           label='Search'
           type='search'
         />
@@ -117,12 +92,12 @@ const Entries: React.FC = () => {
             label='Starred'
           />
         </div>
-        <button className='btn btn-info normal-case' onClick={search}>
+        <button className='btn btn-info normal-case' onClick={() => search()}>
           Search
         </button>
       </div>
       <InfiniteScroll
-        loadMore={loadMore}
+        loadMore={() => search(true)}
         hasMore={!!nextPageToken}
         loader={
           <div className='w-full flex justify-center pt-4'>
@@ -133,6 +108,7 @@ const Entries: React.FC = () => {
         <Table
           columns={['entry', { title: '', key: 'go' }]}
           data={files.map(({ title, date, starred }) => ({
+            id: date,
             entry: (
               <span className='flex gap-2'>
                 {wordDate(date)} {title && '-'} {title}{' '}

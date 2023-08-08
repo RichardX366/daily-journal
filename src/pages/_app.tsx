@@ -148,6 +148,9 @@ export default function App({ Component, pageProps }: AppProps) {
                 <Link href='/entries'>Entries</Link>
               </li>
               <li>
+                <Link href='/images'>View Images</Link>
+              </li>
+              <li>
                 <Link href='/update-image-ids'>Update Image Ids</Link>
               </li>
               <li>

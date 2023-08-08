@@ -9,37 +9,50 @@ export interface FileMetadata {
   starred: boolean;
 }
 
-const getQuery = (
-  matches: {
-    name?: string | { contains: string } | { not: string };
-    mimeType?: string;
-    parent?: string;
-    starred?: boolean;
-    query?: string;
-  }[],
-) =>
+type StringSearch = string | { contains: string } | { not: string };
+
+interface QueryMatch {
+  name?: StringSearch | StringSearch[];
+  mimeType?: StringSearch | StringSearch[];
+  parent?: string;
+  starred?: boolean;
+  query?: string;
+}
+
+const queryHandlers = {
+  name: (name: StringSearch) => {
+    if (typeof name === 'string') return `name='${name}'`;
+    if ('contains' in name) return `name contains '${name.contains}'`;
+    if ('not' in name) return `name != '${name.not}'`;
+  },
+  mimeType: (mimeType: StringSearch) => {
+    if (typeof mimeType === 'string') return `mimeType='${mimeType}'`;
+    if ('contains' in mimeType)
+      return `mimeType contains '${mimeType.contains}'`;
+    if ('not' in mimeType) return `mimeType != '${mimeType.not}'`;
+  },
+  parent: (parent: string) => `'${parent}' in parents`,
+  starred: (starred: boolean) => `starred=${starred}`,
+  query: (query: string) => `fullText contains '${query}'`,
+};
+
+const getQuery = (matches: QueryMatch[]) =>
   encodeURIComponent(
     `(${matches
-      .map(
-        ({ name, mimeType, parent, starred, query }) =>
-          `(${[
-            name
-              ? `name${
-                  (name as any).contains
-                    ? ' contains '
-                    : (name as any).not
-                    ? '!='
-                    : '='
-                }'${(name as any).contains || (name as any).not || name}'`
-              : null,
-            query ? `fullText contains '${query}'` : null,
-            mimeType ? `mimeType='${mimeType}'` : null,
-            parent ? `'${parent}' in parents` : null,
-            starred === undefined ? null : `starred=${starred}`,
-          ]
-            .filter(Boolean)
-            .join(' and ')})`,
-      )
+      .map((match) => {
+        const entries = Object.entries(match).flatMap(([key, value]) =>
+          value === undefined
+            ? []
+            : Array.isArray(value)
+            ? value.map((v) => [key, v])
+            : [[key, value]],
+        );
+        return `(${entries
+          .map(([key, value]) =>
+            queryHandlers[key as keyof QueryMatch](value as never),
+          )
+          .join(' and ')})`;
+      })
       .join(' or ')}) and trashed=false`,
   );
 
@@ -49,13 +62,7 @@ export const paginateFiles = async ({
   order = 'descending',
   pageSize = 30,
 }: {
-  matches?: {
-    name?: string | { contains: string } | { not: string };
-    mimeType?: string;
-    query?: string;
-    parent?: string;
-    starred?: boolean;
-  }[];
+  matches?: QueryMatch[];
   order?: 'ascending' | 'descending';
   pageToken?: string;
   pageSize?: number;
@@ -79,13 +86,7 @@ export const paginateFiles = async ({
 };
 
 export const searchFiles = async (
-  matches: {
-    name?: string | { contains: string } | { not: string };
-    mimeType?: string;
-    query?: string;
-    parent?: string;
-    starred?: boolean;
-  }[],
+  matches: QueryMatch[],
   order: 'ascending' | 'descending' = 'descending',
 ) => {
   const files = await a
