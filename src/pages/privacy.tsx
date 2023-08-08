@@ -15,7 +15,9 @@ const PrivacyPolicy: React.FC = () => {
         App. By using the App, you agree to the practices described in this
         policy.
       </p>
-      <h2 className='text-2xl'>1. Information We Collect</h2>
+      <h2 className='text-2xl'>
+        1. Information We Collect but do not Personally Store
+      </h2>
       <p>The Daily Journal App collects the following information:</p>
       <ul>
         <li>
@@ -23,8 +25,8 @@ const PrivacyPolicy: React.FC = () => {
           experience within the App.
         </li>
         <li>
-          <strong>Email</strong>: We collect your email address to enable
-          communication and account-related notifications.
+          <strong>Email</strong>: We collect your email address to personalize
+          your experience within the App.
         </li>
         <li>
           <strong>Profile Picture</strong>: We collect your profile picture to
@@ -47,12 +49,9 @@ const PrivacyPolicy: React.FC = () => {
           used to personalize your experience within the App.
         </li>
         <li>
-          <strong>Communication</strong>: Your email address is used to send you
-          notifications related to your account and activities.
-        </li>
-        <li>
-          <strong>Journal Entries</strong>: The App stores your journal entries
-          and uploaded images for your reference and use within the App.
+          <strong>Journal Entries</strong>: The app stores your journal entries
+          and uploaded images for your reference and use within the App on
+          Google Drive outside of our external control.
         </li>
         <li>
           <strong>Google Drive Integration</strong>: Uploaded images are
@@ -67,12 +66,9 @@ const PrivacyPolicy: React.FC = () => {
       </p>
       <ul>
         <li>
-          <strong>Google Drive</strong>: Uploaded images are stored directly in
-          your Google Drive account, ensuring that only you have access to them.
-        </li>
-        <li>
-          <strong>Encryption</strong>: We use encryption protocols to secure
-          data transmission between your device and our servers.
+          <strong>Google Drive</strong>: Uploaded images and entries are stored
+          directly in your Google Drive account, ensuring that only you have
+          access to them.
         </li>
       </ul>
       <h2 className='text-2xl'>4. Data Access</h2>
@@ -83,7 +79,7 @@ const PrivacyPolicy: React.FC = () => {
       </p>
       <h2 className='text-2xl'>5. Third-Party Services</h2>
       <p>
-        The App integrates with Google Drive for image storage. Please refer to
+        The app integrates with Google Drive for image storage. Please refer to
         Google&apos;s Privacy Policy for information on how they handle your
         data.
       </p>
@@ -96,14 +92,14 @@ const PrivacyPolicy: React.FC = () => {
         </li>
         <li>
           <strong>Revoking Access</strong>: You can revoke the App&apos;s access
-          to your Google Drive account at any time.
+          to your Google Drive account at any time just by logging out.
         </li>
       </ul>
       <h2 className='text-2xl'>7. Updates to Privacy Policy</h2>
       <p>
         We may update this Privacy Policy to reflect changes in how we handle
-        your information. We will notify you about significant changes via email
-        or within the App.
+        your information. We will notify you about significant changes within
+        the app.
       </p>
       <h2 className='text-2xl'>8. Contact Us</h2>
       <p>
@@ -111,9 +107,9 @@ const PrivacyPolicy: React.FC = () => {
         contact us at richardx366@gmail.com.
       </p>
       <p>
-        By using the Daily Journal App, you acknowledge and agree to the terms
+        By using the Daily Journal app, you acknowledge and agree to the terms
         outlined in this Privacy Policy. Please read the policy carefully and
-        use the App responsibly.
+        use the app responsibly.
       </p>
       <p>
         Thank you for trusting the Daily Journal App to safeguard your personal
