@@ -112,7 +112,10 @@ const Entry: React.FC = () => {
   useEffect(() => {
     if (!date) return;
     globalUser.attach(Persistence('user'));
-    if (!globalUser.email.value) router.push('/about');
+    if (!globalUser.email.value) {
+      router.push('/about');
+      return;
+    }
 
     (async () => {
       const files = await searchFiles([{ name: { contains: date } }]);

@@ -35,7 +35,10 @@ const UpdateImageIds: React.FC = () => {
 
   useEffect(() => {
     globalUser.attach(Persistence('user'));
-    if (!globalUser.email.value) router.push('/about');
+    if (!globalUser.email.value) {
+      router.push('/about');
+      return;
+    }
     globalImageIds.attach(Persistence('imageIds'));
     setImageIds(globalImageIds.value);
 

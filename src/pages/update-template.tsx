@@ -25,7 +25,10 @@ const UpdateTemplate: React.FC = () => {
 
   useEffect(() => {
     globalUser.attach(Persistence('user'));
-    if (!globalUser.email.value) router.push('/about');
+    if (!globalUser.email.value) {
+      router.push('/about');
+      return;
+    }
     globalTemplate.attach(Persistence('template'));
     setText(globalTemplate.value);
 

@@ -19,6 +19,7 @@ import MediaDialog, {
 import MediaSlideshow from '@/components/MediaSlideshow';
 import { folderMimeType } from '@/helpers/constants';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
+import { useHookstate } from '@hookstate/core';
 
 const HTMLDisplay = dynamic(() => import('@/components/HTMLDisplay'), {
   ssr: false,
@@ -42,6 +43,7 @@ const Entry: React.FC = () => {
   const [starred, setStarred] = useState(false);
   const [backDate, setBackDate] = useState('');
   const [nextDate, setNextDate] = useState('');
+  const user = useHookstate(globalUser);
 
   const swapStarred = async () => {
     const results = await Promise.all([
@@ -66,9 +68,12 @@ const Entry: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!date) return;
     globalUser.attach(Persistence('user'));
     if (!globalUser.email.value) router.push('/about');
+  }, []);
+
+  useEffect(() => {
+    if (!date || !user.email.value) return;
 
     (async () => {
       const files = await searchFiles([{ name: { contains: date } }]);
@@ -173,7 +178,7 @@ const Entry: React.FC = () => {
       gallery.forEach(({ url }) => URL.revokeObjectURL(url));
       text.match(/blob:[^'"]+/g)?.forEach(URL.revokeObjectURL);
     };
-  }, [date]);
+  }, [date, user.email.value]);
 
   return (
     <>

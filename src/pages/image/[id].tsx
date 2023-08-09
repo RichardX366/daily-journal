@@ -1,6 +1,9 @@
 import MediaDialog from '@/components/MediaDialog';
 import { folderMimeType } from '@/helpers/constants';
 import { getFile, paginateFiles } from '@/helpers/drive';
+import { globalUser } from '@/helpers/state';
+import { useHookstate } from '@hookstate/core';
+import { Persistence } from '@hookstate/persistence';
 import {
   Input,
   Select,
@@ -22,6 +25,7 @@ const Image: React.FC = () => {
     open: false,
     index: -1,
   });
+  const user = useHookstate(globalUser);
   const router = useRouter();
   const id = router.query.id as string | undefined;
 
@@ -47,8 +51,14 @@ const Image: React.FC = () => {
   };
 
   useEffect(() => {
+    globalUser.attach(Persistence('user'));
+    if (!globalUser.email.value) router.push('/about');
+  }, []);
+
+  useEffect(() => {
+    if (!user.email.value) return;
     search();
-  }, [id]);
+  }, [id, user.email.value]);
 
   useEffect(() => {
     if (

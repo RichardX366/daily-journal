@@ -1,12 +1,20 @@
-import { globalImageIds } from '@/helpers/state';
+import { globalImageIds, globalUser } from '@/helpers/state';
 import { useHookstate } from '@hookstate/core';
+import { Persistence } from '@hookstate/persistence';
 import { unCamelCase } from '@richardx/components';
 import Head from 'next/head';
 import Link from 'next/link';
-import React from 'react';
+import { useRouter } from 'next/router';
+import React, { useEffect } from 'react';
 
 const Images: React.FC = () => {
   const imageIds = useHookstate(globalImageIds);
+  const router = useRouter();
+
+  useEffect(() => {
+    globalUser.attach(Persistence('user'));
+    if (!globalUser.email.value) router.push('/about');
+  }, []);
 
   return (
     <>

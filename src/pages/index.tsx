@@ -16,6 +16,7 @@ import { folderMimeType } from '@/helpers/constants';
 import { AiOutlineInfoCircle } from 'react-icons/ai';
 import MediaDialog, { MediaDialogState } from '@/components/MediaDialog';
 import MediaSlideshow from '@/components/MediaSlideshow';
+import { useHookstate } from '@hookstate/core';
 
 const Home: React.FC<{}> = () => {
   const [date, setDate] = useState(dateInput(new Date()));
@@ -29,6 +30,7 @@ const Home: React.FC<{}> = () => {
   const [saving, setSaving] = useState(false);
   const [existingEntry, setExistingEntry] = useState(false);
   const [showExistingEntry, setShowExistingEntry] = useState(false);
+  const user = useHookstate(globalUser);
   const router = useRouter();
 
   const save = async () => {
@@ -89,7 +91,7 @@ const Home: React.FC<{}> = () => {
   }, []);
 
   useEffect(() => {
-    if (!date) return;
+    if (!date || !user.email.value) return;
 
     (async () => {
       const files = await searchFiles([
@@ -104,7 +106,7 @@ const Home: React.FC<{}> = () => {
         setExistingEntry(false);
       }
     })();
-  }, [date]);
+  }, [date, user.email.value]);
 
   return (
     <>

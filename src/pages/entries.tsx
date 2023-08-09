@@ -1,5 +1,7 @@
 import { folderMimeType } from '@/helpers/constants';
 import { paginateFiles } from '@/helpers/drive';
+import { globalUser } from '@/helpers/state';
+import { Persistence } from '@hookstate/persistence';
 import { Input, Select, Table, wordDate } from '@richardx/components';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -42,6 +44,11 @@ const Entries: React.FC = () => {
   };
 
   useEffect(() => {
+    globalUser.attach(Persistence('user'));
+    if (!globalUser.email.value) {
+      router.push('/about');
+      return;
+    }
     search();
   }, []);
 
