@@ -112,7 +112,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <Head>
         <meta
           name='description'
-          content='An app that lets you keep a daily journal of your life stored on Google Drive.'
+          content='An app that lets you keep a daily journal of your life stored on Google Drive. Get started with one click!'
         />
       </Head>
       <div className='fixed z-10 left-0 top-0 w-full p-4 dark:bg-slate-900 bg-slate-300 border-b dark:border-b-slate-500 border-b-slate-900 flex justify-between gap-2 items-center h-20'>
