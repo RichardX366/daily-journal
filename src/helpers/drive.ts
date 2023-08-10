@@ -22,7 +22,7 @@ interface QueryMatch {
 const queryHandlers = {
   name: (name: StringSearch) => {
     if (typeof name === 'string') return `name='${name}'`;
-    if ('contains' in name) return `name contains '${name.contains}'`;
+    if ('contains' in name) return `name contains '"${name.contains}"'`;
     if ('not' in name) return `name != '${name.not}'`;
   },
   mimeType: (mimeType: StringSearch) => {

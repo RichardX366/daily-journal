@@ -49,8 +49,9 @@ const Entry: React.FC = () => {
         images.map(async ({ src, alt }) =>
           uploadFile(
             await fetch(src).then((res) => res.blob()),
-            `${date}-${alt}`,
+            date,
             folderId,
+            alt,
           ),
         ),
       );
@@ -76,8 +77,9 @@ const Entry: React.FC = () => {
           .map(async ({ url }) =>
             uploadFile(
               await fetch(url).then((res) => res.blob()),
-              date + '-gallery',
+              date,
               folderId,
+              'gallery',
             ),
           ),
       );
@@ -118,7 +120,7 @@ const Entry: React.FC = () => {
     }
 
     (async () => {
-      const files = await searchFiles([{ name: { contains: date } }]);
+      const files = await searchFiles([{ name: date }]);
       if (!files) return;
 
       const folder = files.find(({ mimeType }) => mimeType === folderMimeType);
@@ -138,8 +140,8 @@ const Entry: React.FC = () => {
         if (!html) return;
 
         const imagesInHtml = files.filter(
-          ({ name, mimeType }) =>
-            name !== date + '-gallery' &&
+          ({ description, mimeType }) =>
+            description !== 'gallery' &&
             mimeType !== folderMimeType &&
             mimeType !== 'text/html',
         );
@@ -161,7 +163,7 @@ const Entry: React.FC = () => {
           (
             await Promise.all(
               files
-                .filter(({ name }) => name === date + '-gallery')
+                .filter(({ description }) => description === 'gallery')
                 .map(async ({ id, mimeType }) => {
                   const blob = await getFile(id).blob();
                   if (!blob) return;

@@ -48,14 +48,15 @@ const Home: React.FC<{}> = () => {
         images.map(async ({ src, alt }) =>
           uploadFile(
             await fetch(src).then((res) => res.blob()),
-            `${date}-${alt}`,
+            date,
             dateFolder,
+            alt,
           ),
         ),
       );
       if (imageIds.find((id) => !id)) return;
 
-      const newText = images.reduce((previousText, { src, alt }, i) => {
+      const newText = images.reduce((previousText, { src }, i) => {
         const id = imageIds[i] as string;
         return previousText.replace(src, id);
       }, text);
@@ -70,9 +71,7 @@ const Home: React.FC<{}> = () => {
     };
     const handleGallery = async () => {
       const uploads = await Promise.all(
-        files.map(({ blob }) =>
-          uploadFile(blob, date + '-gallery', dateFolder),
-        ),
+        files.map(({ blob }) => uploadFile(blob, date, dateFolder, 'gallery')),
       );
       if (uploads.find((id) => !id)) return;
       return true;

@@ -76,7 +76,7 @@ const Entry: React.FC = () => {
     if (!date || !user.email.value) return;
 
     (async () => {
-      const files = await searchFiles([{ name: { contains: date } }]);
+      const files = await searchFiles([{ name: date }]);
       if (!files) return;
 
       const folder = files.find(({ mimeType }) => mimeType === folderMimeType);
@@ -96,8 +96,8 @@ const Entry: React.FC = () => {
         if (!html) return;
 
         const imagesInHtml = files.filter(
-          ({ name, mimeType }) =>
-            name !== date + '-gallery' &&
+          ({ description, mimeType }) =>
+            description !== 'gallery' &&
             mimeType !== folderMimeType &&
             mimeType !== 'text/html',
         );
@@ -120,7 +120,7 @@ const Entry: React.FC = () => {
           (
             await Promise.all(
               files
-                .filter(({ name }) => name === date + '-gallery')
+                .filter(({ description }) => description === 'gallery')
                 .map(async ({ id, mimeType }) => {
                   const blob = await getFile(id).blob();
                   if (!blob) return;
@@ -144,8 +144,11 @@ const Entry: React.FC = () => {
       const nearestYear = month < 7 ? year - 1 : year + 1;
       const nearbyDates = await paginateFiles({
         matches: [
-          { mimeType: folderMimeType, name: { contains: year + '-' } },
-          { mimeType: folderMimeType, name: { contains: nearestYear + '-' } },
+          { mimeType: folderMimeType, name: { contains: year.toString() } },
+          {
+            mimeType: folderMimeType,
+            name: { contains: nearestYear.toString() },
+          },
         ],
         order: 'ascending',
         pageSize: 1000,
@@ -154,8 +157,11 @@ const Entry: React.FC = () => {
       while (nearbyDates.nextPageToken) {
         const nextPage = await paginateFiles({
           matches: [
-            { mimeType: folderMimeType, name: { contains: year + '-' } },
-            { mimeType: folderMimeType, name: { contains: nearestYear + '-' } },
+            { mimeType: folderMimeType, name: { contains: year.toString() } },
+            {
+              mimeType: folderMimeType,
+              name: { contains: nearestYear.toString() },
+            },
           ],
           order: 'ascending',
           pageToken: nearbyDates.nextPageToken,
@@ -165,7 +171,7 @@ const Entry: React.FC = () => {
         nearbyDates.files.push(...nextPage.files);
         nearbyDates.nextPageToken = nextPage.nextPageToken;
       }
-      console.log(nearbyDates.files);
+
       const dateIndex = nearbyDates.files.findIndex(
         ({ name }) => name === date,
       );

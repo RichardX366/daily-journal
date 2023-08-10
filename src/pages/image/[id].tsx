@@ -33,17 +33,25 @@ const Image: React.FC = () => {
     if (!id) return;
 
     const results = await paginateFiles({
-      matches: [{ name: [{ contains: query }, { contains: `-${id}` }] }],
+      matches: [
+        {
+          name: { contains: query },
+          query: id,
+          mimeType: { contains: 'image/' },
+        },
+      ],
       order,
       pageToken: nextPageToken,
       pageSize: 50,
     });
     if (!results) return;
     const toAdd = await Promise.all(
-      results.files.map(async (file) => ({
-        date: file.name.replace('-' + id, ''),
-        url: URL.createObjectURL(await getFile(file.id).blob()),
-      })),
+      results.files
+        .filter(({ name }) => name.includes(query))
+        .map(async (file) => ({
+          date: file.name,
+          url: URL.createObjectURL(await getFile(file.id).blob()),
+        })),
     );
     if (!concat) files.forEach(({ url }) => URL.revokeObjectURL(url));
     setFiles(concat ? files.concat(toAdd) : toAdd);
@@ -87,7 +95,7 @@ const Image: React.FC = () => {
           onEnter={() => search()}
           label='Search'
           type='search'
-          placeholder='Use YYYY-MM-DD or segments of it.'
+          placeholder='YYYY-MM-DD or segments. ", " = or.'
         />
         <div className='w-auto md:w-64'>
           <Select
