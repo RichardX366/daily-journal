@@ -7,6 +7,7 @@ export interface FileMetadata {
   description: string;
   mimeType: string;
   starred: boolean;
+  properties: Record<string, string>;
 }
 
 type StringSearch = string | { contains: string } | { not: string };
@@ -17,6 +18,7 @@ interface QueryMatch {
   parent?: string;
   starred?: boolean;
   query?: string;
+  properties?: Record<string, string>;
 }
 
 const queryHandlers = {
@@ -34,6 +36,10 @@ const queryHandlers = {
   parent: (parent: string) => `'${parent}' in parents`,
   starred: (starred: boolean) => `starred=${starred}`,
   query: (query: string) => `fullText contains '${query}'`,
+  properties: (properties: Record<string, string>) =>
+    Object.entries(properties).map(
+      ([key, value]) => `properties has { key='${key}' and value='${value}' }`,
+    ),
 };
 
 const getQuery = (matches: QueryMatch[]) =>
@@ -69,7 +75,7 @@ export const paginateFiles = async ({
 }) => {
   const files = await a
     .get(
-      `drive/v3/files?fields=nextPageToken,files(id,name,mimeType,starred,description)&pageSize=${pageSize}${
+      `drive/v3/files?fields=nextPageToken,files(id,name,mimeType,starred,description,properties)&pageSize=${pageSize}${
         matches ? '&q=' + getQuery(matches) : ''
       }${
         matches?.find(({ query }) => query)
@@ -95,7 +101,7 @@ export const searchFiles = async (
         matches?.find(({ query }) => query)
           ? ''
           : '&orderBy=name' + (order === 'ascending' ? '' : ' desc')
-      }&fields=files(id,name,mimeType,starred,description)&q=${getQuery(
+      }&fields=files(id,name,mimeType,starred,description,properties)&q=${getQuery(
         matches,
       )}`,
     )
@@ -168,7 +174,7 @@ export const uploadFile = async (
   file: Blob,
   name: string,
   parent?: string,
-  description?: string,
+  metadata?: Partial<Omit<FileMetadata, 'id'>>,
 ) => {
   if (!parent) {
     parent = await getRootFolderId();
@@ -184,7 +190,7 @@ export const uploadFile = async (
           name,
           mimeType: file.type,
           parents: [parent],
-          description,
+          ...metadata,
         }),
       ],
       { type: 'application/json' },

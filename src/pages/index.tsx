@@ -51,7 +51,7 @@ const Home: React.FC<{}> = () => {
             await fetch(src).then((res) => res.blob()),
             date,
             dateFolder,
-            alt,
+            { properties: { type: alt } },
           ),
         ),
       );
@@ -66,13 +66,17 @@ const Home: React.FC<{}> = () => {
         new Blob([newText], { type: 'text/html' }),
         date,
         dateFolder,
-        title,
+        { description: title },
       );
       return entry;
     };
     const handleGallery = async () => {
       const uploads = await Promise.all(
-        files.map(({ blob }) => uploadFile(blob, date, dateFolder, 'gallery')),
+        files.map(({ blob }) =>
+          uploadFile(blob, date, dateFolder, {
+            description: 'gallery',
+          }),
+        ),
       );
       if (uploads.find((id) => !id)) return;
       return true;

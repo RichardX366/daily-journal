@@ -51,7 +51,7 @@ const Entry: React.FC = () => {
             await fetch(src).then((res) => res.blob()),
             date,
             folderId,
-            alt,
+            { properties: { type: alt } },
           ),
         ),
       );
@@ -79,7 +79,7 @@ const Entry: React.FC = () => {
               await fetch(url).then((res) => res.blob()),
               date,
               folderId,
-              'gallery',
+              { description: 'gallery' },
             ),
           ),
       );

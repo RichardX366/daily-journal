@@ -36,7 +36,7 @@ const Image: React.FC = () => {
       matches: [
         {
           name: { contains: query },
-          query: id,
+          properties: { type: id },
           mimeType: { contains: 'image/' },
         },
       ],
