@@ -20,6 +20,7 @@ import { useHookstate } from '@hookstate/core';
 
 const Home: React.FC<{}> = () => {
   const [date, setDate] = useState(dateInput(new Date()));
+  const [today] = useState(dateInput(new Date()));
   const [text, setText] = useState('');
   const [title, setTitle] = useState('');
   const [files, setFiles] = useState<MediaFile[]>([]);
@@ -119,7 +120,7 @@ const Home: React.FC<{}> = () => {
             type='date'
             value={date}
             onChange={setDate}
-            max={dateInput(new Date())}
+            max={today}
           />
         </div>
         <div className='flex-1'>

@@ -3,7 +3,10 @@ import React from 'react';
 
 const HTMLDisplay: React.FC<{ children: string }> = ({ children }) => {
   return (
-    <div className='ql-snow ql-container' style={{ borderStyle: 'none' }}>
+    <div
+      className={children ? 'ql-snow ql-container' : 'w-full h-96 skeleton'}
+      style={{ borderStyle: 'none' }}
+    >
       <div
         className='ql-editor html-display'
         dangerouslySetInnerHTML={{

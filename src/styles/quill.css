@@ -60,7 +60,7 @@
 
 .ql-editor img {
   animation: skeleton 1s ease-in-out infinite alternate;
-  @apply bg-gray-500/30 rounded-md;
+  @apply rounded-md;
 }
 
 .html-display > * {

@@ -8,14 +8,14 @@ button.btn {
 
 @keyframes skeleton {
   from {
-    background-opacity: 0.5;
+    @apply bg-gray-500/30;
   }
   to {
-    background-opacity: 0.1;
+    @apply bg-gray-500/20;
   }
 }
 
 .skeleton {
   animation: skeleton 1s ease-in-out infinite alternate;
-  @apply bg-gray-500/30 rounded-md;
+  @apply rounded-md;
 }

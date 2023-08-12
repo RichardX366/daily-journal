@@ -74,6 +74,8 @@ const Entry: React.FC = () => {
 
   useEffect(() => {
     if (!date || !user.email.value) return;
+    setText('');
+    setGallery([]);
 
     (async () => {
       const files = await searchFiles([{ name: date }]);
@@ -94,6 +96,7 @@ const Entry: React.FC = () => {
         setHtmlId(htmlFile.id);
         const html = await getFile(htmlFile.id).text();
         if (!html) return;
+        setText(html);
 
         const imagesInHtml = files.filter(
           ({ description, mimeType }) =>
@@ -107,6 +110,10 @@ const Entry: React.FC = () => {
             url: URL.createObjectURL(await getFile(id).blob()),
           })),
         );
+        if (location.pathname.split('/')[2] !== date) {
+          urls.forEach(({ url }) => URL.revokeObjectURL(url));
+          return;
+        }
         setText(
           urls.reduce(
             (previousText, { id, url }) => previousText.replace(id, url),
@@ -116,23 +123,26 @@ const Entry: React.FC = () => {
       };
 
       const handleGallery = async () => {
-        setGallery(
-          (
-            await Promise.all(
-              files
-                .filter(({ description }) => description === 'gallery')
-                .map(async ({ id, mimeType }) => {
-                  const blob = await getFile(id).blob();
-                  if (!blob) return;
+        const newGallery = (
+          await Promise.all(
+            files
+              .filter(({ description }) => description === 'gallery')
+              .map(async ({ id, mimeType }) => {
+                const blob = await getFile(id).blob();
+                if (!blob) return;
 
-                  return {
-                    type: mimeType.split('/')[0] as 'image',
-                    url: URL.createObjectURL(blob),
-                  };
-                }),
-            )
-          ).filter(Boolean) as any,
-        );
+                return {
+                  type: mimeType.split('/')[0] as 'image',
+                  url: URL.createObjectURL(blob),
+                };
+              }),
+          )
+        ).filter(Boolean) as any;
+        if (location.pathname.split('/')[2] !== date) {
+          newGallery.forEach(({ url }: any) => URL.revokeObjectURL(url));
+          return;
+        }
+        setGallery(newGallery);
       };
 
       await Promise.all([handleHtml(), handleGallery()]);
