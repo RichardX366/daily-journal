@@ -20,7 +20,7 @@ import { useHookstate } from '@hookstate/core';
 
 const Home: React.FC<{}> = () => {
   const [date, setDate] = useState(dateInput(new Date()));
-  const [today] = useState(dateInput(new Date()));
+  const [today, setToday] = useState('');
   const [text, setText] = useState('');
   const [title, setTitle] = useState('');
   const [files, setFiles] = useState<MediaFile[]>([]);
@@ -89,9 +89,13 @@ const Home: React.FC<{}> = () => {
 
   useEffect(() => {
     globalUser.attach(Persistence('user'));
-    if (!globalUser.email.value) router.push('/about');
+    if (!globalUser.email.value) {
+      router.push('/about');
+      return;
+    }
     globalTemplate.attach(Persistence('template'));
     setText(globalTemplate.value);
+    setToday(dateInput(new Date()));
   }, []);
 
   useEffect(() => {
