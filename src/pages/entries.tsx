@@ -30,7 +30,7 @@ const Entries: React.FC = () => {
         },
       ],
       order,
-      pageToken: nextPageToken,
+      pageToken: concat ? nextPageToken : '',
     });
     if (!results) return;
 
