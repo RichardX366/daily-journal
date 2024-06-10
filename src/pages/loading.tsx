@@ -54,6 +54,12 @@ const Loading: React.FC = () => {
         '/about?error=You must allow the app to use Google Drive';
       return;
     }
+    if (!query.get('scope')?.includes('photoslibrary.readonly')) {
+      location.href =
+        location.origin +
+        '/about?error=You must allow the app to use Google Photos';
+      return;
+    }
     if (!firstMount.value) return;
     firstMount.set(false);
     initialRun();
