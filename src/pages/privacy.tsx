@@ -40,6 +40,10 @@ const PrivacyPolicy: React.FC = () => {
           <strong>Uploaded Images</strong>: We upload images attached to journal
           entries to your Google Drive storage.
         </li>
+        <li>
+          <strong>Google Photos IDs</strong>: The IDs of attached Google Photos
+          are stored on your Google Drive.
+        </li>
       </ul>
       <h2 className='text-2xl'>2. Use of Information</h2>
       <p>The information collected is used for the following purposes:</p>
@@ -58,6 +62,12 @@ const PrivacyPolicy: React.FC = () => {
           securely stored on your Google Drive account, ensuring your data
           remains under your control.
         </li>
+        <li>
+          <strong>Google Photos Integration</strong>: The app cannot modify the
+          your Google Photos library and can only read the images you have
+          already uploaded and attach them to journal entries, ensuring the data
+          is under your control.
+        </li>
       </ul>
       <h2 className='text-2xl'>3. Data Security</h2>
       <p>
@@ -70,6 +80,11 @@ const PrivacyPolicy: React.FC = () => {
           directly in your Google Drive account, ensuring that only you have
           access to them.
         </li>
+        <li>
+          <strong>Google Photos</strong>: Our app cannot modify your Google
+          Photos library, and we can only read the images you have already
+          uploaded and attach them to journal entries.
+        </li>
       </ul>
       <h2 className='text-2xl'>4. Data Access</h2>
       <p>
@@ -79,9 +94,11 @@ const PrivacyPolicy: React.FC = () => {
       </p>
       <h2 className='text-2xl'>5. Third-Party Services</h2>
       <p>
-        The app integrates with Google Drive for image storage. Please refer to
-        Google&apos;s Privacy Policy for information on how they handle your
-        data.
+        The app integrates with Google Drive and Google Photos for image
+        storage. Please refer to Google&apos;s Privacy Policy for information on
+        how they handle your data. Our access to Google Photos is read-only, and
+        the user is responsible for uploading images to Google Photos. Our app
+        only attaches the image IDs to the journal entries.
       </p>
       <h2 className='text-2xl'>6. User Control</h2>
       <p>You have control over your data:</p>
@@ -104,7 +121,7 @@ const PrivacyPolicy: React.FC = () => {
       <h2 className='text-2xl'>8. Contact Us</h2>
       <p>
         If you have questions or concerns about this Privacy Policy, please
-        contact us at richardx366@gmail.com.
+        contact us at richard134x@gmail.com.
       </p>
       <p>
         By using the Daily Journal app, you acknowledge and agree to the terms
