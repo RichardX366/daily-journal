@@ -18,6 +18,18 @@ const About: React.FC = () => {
             for. You can also look through compilations of images over time.
             Navigate by clicking on your profile after logging in.
           </p>
+          <p className='md:w-[600px]'>
+            <b>Discloser</b>: Daily Journal&apos;s use and transfer to any other
+            app of information received from Google APIs will adhere to{' '}
+            <Link
+              href='https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes'
+              className='underline'
+              target='_blank'
+            >
+              Google API Services User Data Policy
+            </Link>
+            , including the Limited Use requirements.
+          </p>
         </div>
       </div>
       <div className='hero bg-blue-300/30 dark:bg-blue-900/30 py-12 px-8'>
