@@ -4,19 +4,20 @@ import React, { useEffect, useState } from 'react';
 import Quill from '@/components/Quill';
 import { Persistence } from '@hookstate/persistence';
 import { useRouter } from 'next/router';
+import { dateInput, Input, error } from '@richardx/components';
 import {
-  dateInput,
-  Input,
-  MediaInput,
-  MediaFile,
-  error,
-} from '@richardx/components';
-import { createFolder, searchFiles, uploadFile } from '@/helpers/drive';
+  createFolder,
+  paginateFiles,
+  searchFiles,
+  updateFileMetadata,
+  uploadFile,
+} from '@/helpers/drive';
 import { folderMimeType } from '@/helpers/constants';
 import { AiOutlineInfoCircle } from 'react-icons/ai';
 import MediaDialog, { MediaDialogState } from '@/components/MediaDialog';
 import MediaSlideshow from '@/components/MediaSlideshow';
 import { useHookstate } from '@hookstate/core';
+import PhotoSelect, { MediaFile } from '@/components/PhotoSelect';
 
 const Home: React.FC<{}> = () => {
   const [date, setDate] = useState(dateInput(new Date()));
@@ -34,12 +35,68 @@ const Home: React.FC<{}> = () => {
   const user = useHookstate(globalUser);
   const router = useRouter();
 
+  const calculateSurroundingDates = async () => {
+    const year = +date.split('-')[0];
+    const month = +date.split('-')[1];
+    const nearestYear = month < 7 ? year - 1 : year + 1;
+
+    const nearbyDates = await paginateFiles({
+      matches: [
+        { mimeType: folderMimeType, name: { contains: year.toString() } },
+        {
+          mimeType: folderMimeType,
+          name: { contains: nearestYear.toString() },
+        },
+      ],
+      order: 'ascending',
+      pageSize: 1000,
+    });
+    if (!nearbyDates) return;
+
+    let dateIndex = nearbyDates.files.findIndex(
+      ({ name }) => new Date(name).getTime() > new Date(date).getTime(),
+    );
+    if (dateIndex === -1) dateIndex = nearbyDates.files.length;
+    return [nearbyDates.files[dateIndex - 1], nearbyDates.files[dateIndex]];
+  };
+
   const save = async () => {
     if (!text) return error('You need to have something in your journal entry');
     setSaving(true);
 
-    const dateFolder = await createFolder({ name: date, description: title });
-    if (!dateFolder) return setSaving(false);
+    const surroundingDates = await calculateSurroundingDates();
+    if (!surroundingDates) return setSaving(false);
+
+    const requests = [
+      createFolder({
+        name: date,
+        description: title,
+        properties: {
+          previous: surroundingDates[0]?.name || '',
+          next: surroundingDates[1]?.name || '',
+        },
+      }),
+    ];
+
+    if (surroundingDates[0]) {
+      requests.push(
+        updateFileMetadata(surroundingDates[0].id, {
+          properties: { next: date },
+        }),
+      );
+    }
+    if (surroundingDates[1]) {
+      requests.push(
+        updateFileMetadata(surroundingDates[1].id, {
+          properties: { previous: date },
+        }),
+      );
+    }
+
+    const responses = await Promise.all(requests);
+    if (responses.findIndex((response) => !response) !== -1)
+      return setSaving(false);
+    const dateFolder = responses[0];
 
     const handleMain = async () => {
       const images: HTMLImageElement[] = Array.from(
@@ -71,19 +128,17 @@ const Home: React.FC<{}> = () => {
       return entry;
     };
     const handleGallery = async () => {
-      const uploads = await Promise.all(
-        files.map(({ blob }) =>
-          uploadFile(blob, date, dateFolder, {
-            description: 'gallery',
-          }),
-        ),
+      const text = files.map(({ id }) => id).join('\n');
+      const upload = await uploadFile(
+        new Blob([text], { type: 'text/plain' }),
+        date,
+        dateFolder,
       );
-      if (uploads.find((id) => !id)) return;
-      return true;
+      return upload;
     };
 
     const results = await Promise.all([handleMain(), handleGallery()]);
-    if (results.find((result) => !result)) return setSaving(false);
+    if (results.findIndex((result) => !result) !== -1) return setSaving(false);
     router.push('/entry/' + date);
   };
 
@@ -140,15 +195,18 @@ const Home: React.FC<{}> = () => {
             disabled={existingEntry}
           />
         </div>
-        <div className='flex-1'>
-          <MediaInput
-            label='Upload'
-            allowVideo
-            multiple
-            onChange={setFiles}
-            disabled={existingEntry}
-          />
-        </div>
+        <PhotoSelect
+          onUpload={(newFiles) =>
+            setFiles([
+              ...files,
+              ...newFiles.filter(
+                ({ id }) => files.findIndex((file) => file.id === id) === -1,
+              ),
+            ])
+          }
+          disabled={existingEntry}
+          initialDate={date}
+        />
         <button
           className='btn btn-info'
           onClick={save}
@@ -157,23 +215,15 @@ const Home: React.FC<{}> = () => {
           Save {saving && <span className='loading loading-spinner ml-2' />}
         </button>
       </div>
-      <MediaSlideshow
-        files={files.map(({ url, blob }) => ({
-          url,
-          type: blob.type.split('/')[0] as 'image',
-        }))}
-        setState={setMediaDialog}
-      />
+      <MediaSlideshow files={files} setState={setMediaDialog} />
       <div className={existingEntry ? 'pointer-events-none' : ''}>
         <Quill value={text} onChange={setText} />
       </div>
       <MediaDialog
         state={mediaDialog}
         setState={setMediaDialog}
-        files={files.map(({ url, blob }) => ({
-          url,
-          type: blob.type.split('/')[0] as 'image',
-        }))}
+        files={files}
+        setFiles={setFiles}
       />
       <div
         className={`toast toast-start toast-top top-20 transition-opacity ${

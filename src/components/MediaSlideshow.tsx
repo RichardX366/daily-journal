@@ -1,10 +1,10 @@
 import { Splide, SplideSlide } from '@splidejs/react-splide';
 import React, { useEffect, useRef } from 'react';
-import { MediaDialogFile, MediaDialogState } from './MediaDialog';
-import { AiFillCaretRight } from 'react-icons/ai';
+import { MediaDialogState } from './MediaDialog';
+import { MediaFile } from './PhotoSelect';
 
 const MediaSlideshow: React.FC<{
-  files: MediaDialogFile[];
+  files: MediaFile[];
   setState: (v: MediaDialogState) => void;
 }> = ({ files, setState }) => {
   const splideRef = useRef<Splide>(null);
@@ -41,21 +41,7 @@ const MediaSlideshow: React.FC<{
             })
           }
         >
-          {file.type === 'image' ? (
-            <img className='h-48 rounded-md' src={file.url} alt='image' />
-          ) : (
-            <>
-              <video className='h-48 rounded-md' src={file.url} />
-              <div className='absolute inset-0 flex justify-center items-center'>
-                <AiFillCaretRight className='w-8 h-8 bg-white/30 dark:bg-black/30 rounded-full' />
-              </div>
-            </>
-          )}
-          {file.uploaded && (
-            <span className='badge absolute top-0 right-2 bg-green-500 text-white rounded-md'>
-              Uploaded
-            </span>
-          )}
+          <img className='h-48 rounded-md' src={file.url} alt='image' />
         </SplideSlide>
       ))}
     </Splide>

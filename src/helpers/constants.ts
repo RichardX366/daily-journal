@@ -3,6 +3,7 @@ export const scopes = [
   'profile',
   'email',
   'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/photoslibrary.readonly',
 ];
 
 export const clientId =

@@ -1,7 +1,6 @@
 import {
   deleteFile,
   getFile,
-  paginateFiles,
   searchFiles,
   updateFileMetadata,
 } from '@/helpers/drive';
@@ -11,15 +10,14 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Modal, error, wordDate } from '@richardx/components';
-import MediaDialog, {
-  MediaDialogFile,
-  MediaDialogState,
-} from '@/components/MediaDialog';
+import { Modal, dateInput, error, wordDate } from '@richardx/components';
+import MediaDialog, { MediaDialogState } from '@/components/MediaDialog';
 import MediaSlideshow from '@/components/MediaSlideshow';
 import { folderMimeType } from '@/helpers/constants';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { useHookstate } from '@hookstate/core';
+import { MediaFile } from '@/components/PhotoSelect';
+import { getPhotos } from '@/helpers/photos';
 
 const HTMLDisplay = dynamic(() => import('@/components/HTMLDisplay'), {
   ssr: false,
@@ -33,7 +31,7 @@ const Entry: React.FC = () => {
   const [text, setText] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [gallery, setGallery] = useState<MediaDialogFile[]>([]);
+  const [gallery, setGallery] = useState<MediaFile[]>([]);
   const [mediaDialog, setMediaDialog] = useState<MediaDialogState>({
     open: false,
     index: -1,
@@ -54,15 +52,52 @@ const Entry: React.FC = () => {
         starred: !starred,
       }),
     ]);
-    if (results.find((response) => !response)) return;
+    if (results.findIndex((response) => !response) !== -1) return;
     setStarred(!starred);
   };
 
   const handleDelete = () => {
     setDeleting(true);
     (async () => {
-      const result = await deleteFile(folderId);
-      if (!result) return setDeleting(false);
+      const requests = await Promise.all([
+        deleteFile(folderId),
+        (async () => {
+          let backFolder = '';
+          let nextFolder = '';
+          const query = [];
+          if (backDate) {
+            query.push({ name: backDate, mimeType: folderMimeType });
+          }
+          if (nextDate) {
+            query.push({ name: nextDate, mimeType: folderMimeType });
+          }
+          const result = await searchFiles(query);
+          if (!result) return;
+          if (backDate) {
+            backFolder = result.find(({ name }) => name === backDate)?.id || '';
+          }
+          if (nextDate) {
+            nextFolder = result.find(({ name }) => name === nextDate)?.id || '';
+          }
+          const updates = await Promise.all([
+            backFolder
+              ? updateFileMetadata(backFolder, {
+                  properties: { next: nextDate },
+                })
+              : true,
+            nextFolder
+              ? updateFileMetadata(nextFolder, {
+                  properties: { previous: backDate },
+                })
+              : true,
+          ]);
+          if (updates.findIndex((update) => !update) !== -1) return;
+          return true;
+        })(),
+      ]);
+      if (requests.findIndex((request) => !request) !== -1) {
+        return setDeleting(false);
+      }
       router.push('/');
     })();
   };
@@ -89,6 +124,8 @@ const Entry: React.FC = () => {
       setFolderId(folder.id);
       setStarred(folder.starred);
       setTitle(folder.description);
+      setBackDate(folder.properties.previous);
+      setNextDate(folder.properties.next);
 
       const handleHtml = async () => {
         const htmlFile = files.find(({ mimeType }) => mimeType === 'text/html');
@@ -99,10 +136,8 @@ const Entry: React.FC = () => {
         setText(html);
 
         const imagesInHtml = files.filter(
-          ({ description, mimeType }) =>
-            description !== 'gallery' &&
-            mimeType !== folderMimeType &&
-            mimeType !== 'text/html',
+          ({ mimeType }) =>
+            !mimeType.includes('text/') && mimeType !== folderMimeType,
         );
         const urls = await Promise.all(
           imagesInHtml.map(async ({ id }) => ({
@@ -123,71 +158,25 @@ const Entry: React.FC = () => {
       };
 
       const handleGallery = async () => {
-        const newGallery = (
-          await Promise.all(
-            files
-              .filter(({ description }) => description === 'gallery')
-              .map(async ({ id, mimeType }) => {
-                const blob = await getFile(id).blob();
-                if (!blob) return;
-
-                return {
-                  type: mimeType.split('/')[0] as 'image',
-                  url: URL.createObjectURL(blob),
-                };
-              }),
-          )
-        ).filter(Boolean) as any;
-        if (location.pathname.split('/')[2] !== date) {
-          newGallery.forEach(({ url }: any) => URL.revokeObjectURL(url));
-          return;
-        }
-        setGallery(newGallery);
+        const itemsFile = files.find(
+          ({ mimeType }) => mimeType === 'text/plain',
+        );
+        if (!itemsFile) return;
+        const items = await getFile(itemsFile.id).text();
+        if (!items) return;
+        const photos = await getPhotos(items.split('\n'));
+        if (!photos?.length) return;
+        setGallery(
+          photos.map(({ id, baseUrl, mediaMetadata, mimeType }: any) => ({
+            id,
+            url: baseUrl,
+            date: dateInput(mediaMetadata.creationTime),
+            type: mimeType.startsWith('image') ? 'image' : 'video',
+          })),
+        );
       };
 
       await Promise.all([handleHtml(), handleGallery()]);
-    })();
-
-    (async () => {
-      const year = +date.slice(0, 4);
-      const month = +date.slice(4, 6);
-      const nearestYear = month < 7 ? year - 1 : year + 1;
-      const nearbyDates = await paginateFiles({
-        matches: [
-          { mimeType: folderMimeType, name: { contains: year.toString() } },
-          {
-            mimeType: folderMimeType,
-            name: { contains: nearestYear.toString() },
-          },
-        ],
-        order: 'ascending',
-        pageSize: 1000,
-      });
-      if (!nearbyDates) return;
-      while (nearbyDates.nextPageToken) {
-        const nextPage = await paginateFiles({
-          matches: [
-            { mimeType: folderMimeType, name: { contains: year.toString() } },
-            {
-              mimeType: folderMimeType,
-              name: { contains: nearestYear.toString() },
-            },
-          ],
-          order: 'ascending',
-          pageToken: nearbyDates.nextPageToken,
-          pageSize: 1000,
-        });
-        if (!nextPage) return;
-        nearbyDates.files.push(...nextPage.files);
-        nearbyDates.nextPageToken = nextPage.nextPageToken;
-      }
-
-      const dateIndex = nearbyDates.files.findIndex(
-        ({ name }) => name === date,
-      );
-      if (dateIndex === -1) return;
-      setBackDate(nearbyDates.files[dateIndex - 1]?.name || '');
-      setNextDate(nearbyDates.files[dateIndex + 1]?.name || '');
     })();
 
     return () => {

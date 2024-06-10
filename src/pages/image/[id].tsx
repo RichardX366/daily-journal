@@ -1,5 +1,4 @@
 import MediaDialog from '@/components/MediaDialog';
-import { folderMimeType } from '@/helpers/constants';
 import { getFile, paginateFiles } from '@/helpers/drive';
 import { globalUser } from '@/helpers/state';
 import { useHookstate } from '@hookstate/core';
@@ -12,6 +11,7 @@ import {
   wordDate,
 } from '@richardx/components';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroller';
@@ -41,7 +41,7 @@ const Image: React.FC = () => {
         },
       ],
       order,
-      pageToken: nextPageToken,
+      pageToken: concat ? nextPageToken : '',
       pageSize: 50,
     });
     if (!results) return;
@@ -126,7 +126,9 @@ const Image: React.FC = () => {
           data={files.map((date, i) => ({
             entry: (
               <div className='flex justify-between flex-col md:flex-row gap-4 pb-4 md:pb-2 items-center'>
-                <span>{wordDate(date.date)}</span>
+                <Link href={'/entry/' + date.date} className='underline'>
+                  {wordDate(date.date)}
+                </Link>
                 <img
                   src={date.url}
                   alt={date.date}
@@ -141,7 +143,13 @@ const Image: React.FC = () => {
       <MediaDialog
         state={mediaDialog}
         setState={setMediaDialog}
-        files={files.map(({ url }) => ({ type: 'image', url }))}
+        files={files.map(({ url }) => ({
+          type: 'image' as 'image',
+          url,
+          date: '',
+          id: '',
+        }))}
+        drive
       />
     </>
   );

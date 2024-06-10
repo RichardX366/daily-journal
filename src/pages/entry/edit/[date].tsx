@@ -12,23 +12,23 @@ import { Persistence } from '@hookstate/persistence';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import { Input, MediaInput, error, wordDate } from '@richardx/components';
-import MediaDialog, {
-  MediaDialogFile,
-  MediaDialogState,
-} from '@/components/MediaDialog';
+import { Input, dateInput, error, wordDate } from '@richardx/components';
+import MediaDialog, { MediaDialogState } from '@/components/MediaDialog';
 import MediaSlideshow from '@/components/MediaSlideshow';
 import { folderMimeType } from '@/helpers/constants';
 import Quill from '@/components/Quill';
+import { getPhotos } from '@/helpers/photos';
+import PhotoSelect, { MediaFile } from '@/components/PhotoSelect';
 
 const Entry: React.FC = () => {
   const router = useRouter();
   const date = router.query.date as string | undefined;
   const [folderId, setFolderId] = useState('');
   const [htmlId, setHtmlId] = useState('');
+  const [galleryId, setGalleryId] = useState('');
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
-  const [gallery, setGallery] = useState<MediaDialogFile[]>([]);
+  const [gallery, setGallery] = useState<MediaFile[]>([]);
   const [mediaDialog, setMediaDialog] = useState<MediaDialogState>({
     open: false,
     index: -1,
@@ -45,6 +45,12 @@ const Entry: React.FC = () => {
     );
 
     const handleMain = async () => {
+      const imageRemoval = await Promise.all(
+        filesOnDrive
+          .filter(({ mimeType }) => mimeType.includes('image/'))
+          .map(({ id }) => deleteFile(id)),
+      );
+      if (imageRemoval.findIndex((result) => !result) !== -1) return;
       const imageIds = await Promise.all(
         images.map(async ({ src, alt }) =>
           uploadFile(
@@ -71,43 +77,20 @@ const Entry: React.FC = () => {
     };
 
     const handleGallery = async () => {
-      const uploads = await Promise.all(
-        gallery
-          .filter(({ uploaded }) => !uploaded)
-          .map(async ({ url }) =>
-            uploadFile(
-              await fetch(url).then((res) => res.blob()),
-              date,
-              folderId,
-              { description: 'gallery' },
-            ),
-          ),
+      const text = gallery.map(({ id }) => id).join('\n');
+      const upload = await updateFile(
+        galleryId,
+        new Blob([text], { type: 'text/plain' }),
       );
-      if (uploads.find((id) => !id)) return;
-      return true;
-    };
-
-    const handleDeleteUnused = async () => {
-      const unusedFiles = filesOnDrive.filter(
-        ({ mimeType, id }) =>
-          mimeType !== folderMimeType &&
-          mimeType !== 'text/html' &&
-          !gallery.find(({ driveId }) => driveId === id),
-      );
-      const responses = await Promise.all(
-        unusedFiles.map(({ id }) => deleteFile(id)),
-      );
-      if (responses.find((response) => !response)) return;
-      return true;
+      return upload;
     };
 
     const results = await Promise.all([
       handleMain(),
       handleGallery(),
-      handleDeleteUnused(),
       updateFileMetadata(folderId, { description: title }),
     ]);
-    if (results.find((result) => !result)) return setSaving(false);
+    if (results.findIndex((result) => !result) !== -1) return setSaving(false);
     router.push('/entry/' + date);
   };
 
@@ -140,10 +123,8 @@ const Entry: React.FC = () => {
         if (!html) return;
 
         const imagesInHtml = files.filter(
-          ({ description, mimeType }) =>
-            description !== 'gallery' &&
-            mimeType !== folderMimeType &&
-            mimeType !== 'text/html',
+          ({ mimeType }) =>
+            !mimeType.includes('text/') && mimeType !== folderMimeType,
         );
         const urls = await Promise.all(
           imagesInHtml.map(async ({ id }) => ({
@@ -159,24 +140,22 @@ const Entry: React.FC = () => {
       };
 
       const handleGallery = async () => {
+        const itemsFile = files.find(
+          ({ mimeType }) => mimeType === 'text/plain',
+        );
+        if (!itemsFile) return;
+        setGalleryId(itemsFile.id);
+        const items = await getFile(itemsFile.id).text();
+        if (!items) return;
+        const photos = await getPhotos(items.split('\n'));
+        if (!photos?.length) return;
         setGallery(
-          (
-            await Promise.all(
-              files
-                .filter(({ description }) => description === 'gallery')
-                .map(async ({ id, mimeType }) => {
-                  const blob = await getFile(id).blob();
-                  if (!blob) return;
-
-                  return {
-                    type: mimeType.split('/')[0] as 'image',
-                    url: URL.createObjectURL(blob),
-                    uploaded: true,
-                    driveId: id,
-                  };
-                }),
-            )
-          ).filter(Boolean) as any,
+          photos.map(({ id, baseUrl, mediaMetadata, mimeType }: any) => ({
+            id,
+            url: baseUrl,
+            date: dateInput(mediaMetadata.creationTime),
+            type: mimeType.startsWith('image') ? 'image' : 'video',
+          })),
         );
       };
 
@@ -184,7 +163,6 @@ const Entry: React.FC = () => {
     })();
 
     return () => {
-      gallery.forEach(({ url }) => URL.revokeObjectURL(url));
       text.match(/blob:[^'"]+/g)?.forEach(URL.revokeObjectURL);
     };
   }, [date]);
@@ -214,24 +192,17 @@ const Entry: React.FC = () => {
             placeholder='Canada Trip Day 1'
           />
         </div>
-        <div className='flex-1'>
-          <MediaInput
-            label='Upload'
-            allowVideo
-            multiple
-            onChange={(files, e) => {
-              setGallery([
-                ...gallery,
-                ...files.map(({ url, blob }) => ({
-                  url,
-                  type: blob.type.split('/')[0] as 'image',
-                  uploaded: false,
-                })),
-              ]);
-              e.target.value = '';
-            }}
-          />
-        </div>
+        <PhotoSelect
+          onUpload={(newFiles) =>
+            setGallery([
+              ...gallery,
+              ...newFiles.filter(
+                ({ id }) => gallery.findIndex((file) => file.id === id) === -1,
+              ),
+            ])
+          }
+          initialDate={date}
+        />
         <button className='btn btn-info' onClick={save} disabled={saving}>
           Save {saving && <span className='loading loading-spinner ml-2' />}
         </button>

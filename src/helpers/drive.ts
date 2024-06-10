@@ -1,5 +1,5 @@
 import { folderMimeType } from './constants';
-import a from './ky';
+import { drive } from './ky';
 
 export interface FileMetadata {
   id: string;
@@ -73,7 +73,7 @@ export const paginateFiles = async ({
   pageToken?: string;
   pageSize?: number;
 }) => {
-  const files = await a
+  const files = await drive
     .get(
       `drive/v3/files?fields=nextPageToken,files(id,name,mimeType,starred,description,properties)&pageSize=${pageSize}${
         matches ? '&q=' + getQuery(matches) : ''
@@ -95,7 +95,7 @@ export const searchFiles = async (
   matches: QueryMatch[],
   order: 'ascending' | 'descending' = 'descending',
 ) => {
-  const files = await a
+  const files = await drive
     .get(
       `drive/v3/files?pageSize=1000${
         matches?.find(({ query }) => query)
@@ -116,7 +116,7 @@ export const getRootFolderId = async () => {
   ]);
   if (!files) return;
   if (!files.length) {
-    const rootFolder = await a
+    const rootFolder = await drive
       .post(`drive/v3/files`, {
         json: {
           name: 'Daily Journal',
@@ -147,22 +147,25 @@ export const createFolder = async ({
   name,
   parent,
   description,
+  properties,
 }: {
   name: string;
   description?: string;
   parent?: string;
+  properties?: Record<string, string>;
 }) => {
   if (!parent) {
     parent = await getRootFolderId();
     if (!parent) return;
   }
-  const folder = await a
+  const folder = await drive
     .post(`drive/v3/files`, {
       json: {
         name,
         mimeType: folderMimeType,
         description,
         parents: [parent],
+        properties,
       },
     })
     .json<any>();
@@ -198,7 +201,7 @@ export const uploadFile = async (
   );
   form.append('file', file);
 
-  const result = await a
+  const result = await drive
     .post(`upload/drive/v3/files?uploadType=multipart&fields=id`, {
       body: form,
     })
@@ -220,7 +223,7 @@ export const updateFile = async (
   );
   form.append('file', newContent);
 
-  const result = await a
+  const result = await drive
     .patch(`upload/drive/v3/files/${id}?uploadType=multipart&fields=id`, {
       body: form,
     })
@@ -234,7 +237,7 @@ export const updateFileMetadata = async (
   id: string,
   metadata: Partial<Omit<FileMetadata, 'id'>>,
 ) => {
-  const result = await a
+  const result = await drive
     .patch(`drive/v3/files/${id}`, {
       json: metadata,
     })
@@ -244,7 +247,7 @@ export const updateFileMetadata = async (
 };
 
 export const deleteFile = async (id: string) => {
-  const result = await a.delete(`drive/v3/files/${id}`);
+  const result = await drive.delete(`drive/v3/files/${id}`);
   if (!result.ok) return;
   return true;
 };
@@ -252,4 +255,5 @@ export const deleteFile = async (id: string) => {
 export const fileListToMap = (files: { id: string; name: string }[]) =>
   Object.fromEntries(files.map(({ id, name }) => [name, id]));
 
-export const getFile = (id: string) => a.get(`drive/v3/files/${id}?alt=media`);
+export const getFile = (id: string) =>
+  drive.get(`drive/v3/files/${id}?alt=media`);

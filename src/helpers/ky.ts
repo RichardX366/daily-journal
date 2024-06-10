@@ -1,35 +1,44 @@
-import ky from 'ky';
+import ky, { Hooks } from 'ky';
 import { globalAccessToken, globalUser } from './state';
 import { error } from '@richardx/components';
 import { clientId, clientSecret } from './constants';
 
-const a = ky.extend({
+const hooks: Hooks = {
+  beforeRequest: [
+    async (request) => {
+      if (globalAccessToken.token.value) {
+        if (globalAccessToken.expiresAt.value - Date.now() < 60000) {
+          await refreshAccessToken();
+        }
+        request.headers.set(
+          'Authorization',
+          `Bearer ${globalAccessToken.token.value}`,
+        );
+      }
+      return request;
+    },
+  ],
+  afterResponse: [
+    async (request, options, response) => {
+      if (!response.ok) {
+        error(await response.text());
+        return new Response();
+      }
+      return response;
+    },
+  ],
+};
+
+export const drive = ky.extend({
   prefixUrl: 'https://www.googleapis.com',
-  hooks: {
-    beforeRequest: [
-      async (request) => {
-        if (globalAccessToken.token.value) {
-          if (globalAccessToken.expiresAt.value - Date.now() < 60000) {
-            await refreshAccessToken();
-          }
-          request.headers.set(
-            'Authorization',
-            `Bearer ${globalAccessToken.token.value}`,
-          );
-        }
-        return request;
-      },
-    ],
-    afterResponse: [
-      async (request, options, response) => {
-        if (!response.ok) {
-          error(await response.text());
-          return new Response();
-        }
-        return response;
-      },
-    ],
-  },
+  hooks,
+  throwHttpErrors: false,
+});
+
+export const googlePhotos = ky.extend({
+  prefixUrl: 'https://photoslibrary.googleapis.com/v1',
+  hooks,
+  throwHttpErrors: false,
 });
 
 const refreshAccessToken = async () => {
@@ -60,5 +69,3 @@ const refreshAccessToken = async () => {
     location.href = location.origin + '?error=Please log in again';
   }
 };
-
-export default a;
