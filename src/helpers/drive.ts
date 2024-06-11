@@ -67,17 +67,19 @@ export const paginateFiles = async ({
   pageToken,
   order = 'descending',
   pageSize = 30,
+  include = ['id', 'name', 'mimeType', 'starred', 'description', 'properties'],
 }: {
   matches?: QueryMatch[];
   order?: 'ascending' | 'descending';
   pageToken?: string;
   pageSize?: number;
+  include?: (keyof FileMetadata)[];
 }) => {
   const files = await drive
     .get(
-      `drive/v3/files?fields=nextPageToken,files(id,name,mimeType,starred,description,properties)&pageSize=${pageSize}${
-        matches ? '&q=' + getQuery(matches) : ''
-      }${
+      `drive/v3/files?fields=nextPageToken,files(${include.join(
+        ',',
+      )})&pageSize=${pageSize}${matches ? '&q=' + getQuery(matches) : ''}${
         matches?.find(({ query }) => query)
           ? ''
           : '&orderBy=name' + (order === 'ascending' ? '' : ' desc')

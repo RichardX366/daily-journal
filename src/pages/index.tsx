@@ -50,6 +50,7 @@ const Home: React.FC<{}> = () => {
       ],
       order: 'ascending',
       pageSize: 1000,
+      include: ['id', 'name'],
     });
     if (!nearbyDates) return;
 

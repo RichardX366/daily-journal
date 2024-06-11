@@ -32,13 +32,11 @@ const hooks: Hooks = {
 export const drive = ky.extend({
   prefixUrl: 'https://www.googleapis.com',
   hooks,
-  throwHttpErrors: false,
 });
 
 export const googlePhotos = ky.extend({
   prefixUrl: 'https://photoslibrary.googleapis.com/v1',
   hooks,
-  throwHttpErrors: false,
 });
 
 const refreshAccessToken = async () => {

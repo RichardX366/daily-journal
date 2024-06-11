@@ -1,6 +1,6 @@
 import { useHotkeys } from '@mantine/hooks';
 import { Modal } from '@richardx/components';
-import React from 'react';
+import React, { useState } from 'react';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { MediaFile } from './PhotoSelect';
 
@@ -16,11 +16,14 @@ const MediaDialog: React.FC<{
   setFiles?: (v: MediaFile[]) => void;
   drive?: boolean;
 }> = ({ state, setState, files, setFiles, drive }) => {
+  const [hd, setHD] = useState(false);
+
   const backMediaDialog = () => {
     setState({
       open: true,
       index: state.index - 1,
     });
+    setHD(false);
   };
 
   const nextMediaDialog = () => {
@@ -28,14 +31,22 @@ const MediaDialog: React.FC<{
       open: true,
       index: state.index + 1,
     });
+    setHD(false);
   };
 
   const deleteFile = () => {
     if (!setFiles) return;
     if (state.index === files.length - 1) {
-      if (!state.index) setState({ ...state, open: false });
-      else setState({ ...state, index: state.index - 1 });
+      if (!state.index) {
+        setState({ ...state, open: false });
+        setTimeout(() => {
+          setHD(false);
+          setFiles(files.filter((_, i) => i !== state.index));
+        }, 200);
+        return;
+      } else setState({ ...state, index: state.index - 1 });
     }
+    setHD(false);
     setFiles(files.filter((_, i) => i !== state.index));
   };
 
@@ -50,7 +61,10 @@ const MediaDialog: React.FC<{
   return (
     <Modal
       open={state.open}
-      setOpen={(open) => setState({ ...state, open })}
+      setOpen={(open) => {
+        setState({ ...state, open });
+        setTimeout(() => setHD(false), 200);
+      }}
       actions={
         <div className='flex justify-between w-full'>
           <button
@@ -78,7 +92,14 @@ const MediaDialog: React.FC<{
       }
     >
       <div className='flex justify-center max-h-[calc(100vh-13rem)] relative'>
-        {files[state.index]?.type === 'image' ? (
+        {!drive && hd === false ? (
+          <img
+            src={files[state.index]?.url}
+            alt='media'
+            className='object-contain rounded-md max-h-[calc(100vh-13rem)] cursor-pointer'
+            onClick={() => setHD(true)}
+          />
+        ) : files[state.index]?.type === 'image' ? (
           <img
             src={files[state.index]?.url + (drive ? '' : '=d')}
             alt='image'

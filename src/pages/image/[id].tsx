@@ -7,6 +7,7 @@ import {
   Input,
   Select,
   Table,
+  error,
   unCamelCase,
   wordDate,
 } from '@richardx/components';
@@ -21,6 +22,7 @@ const Image: React.FC = () => {
   const [order, setOrder] = useState<'ascending' | 'descending'>('descending');
   const [files, setFiles] = useState<{ url: string; date: string }[]>([]);
   const [nextPageToken, setNextPageToken] = useState('');
+  const [disableSearch, setDisableSearch] = useState(false);
   const [mediaDialog, setMediaDialog] = useState({
     open: false,
     index: -1,
@@ -31,7 +33,7 @@ const Image: React.FC = () => {
 
   const search = async (concat = false) => {
     if (!id) return;
-
+    setDisableSearch(true);
     const results = await paginateFiles({
       matches: [
         {
@@ -42,7 +44,8 @@ const Image: React.FC = () => {
       ],
       order,
       pageToken: concat ? nextPageToken : '',
-      pageSize: 50,
+      pageSize: 25,
+      include: ['id', 'name'],
     });
     if (!results) return;
     const toAdd = await Promise.all(
@@ -50,7 +53,7 @@ const Image: React.FC = () => {
         .filter(({ name }) => name.includes(query))
         .map(async (file) => ({
           date: file.name,
-          url: URL.createObjectURL(await getFile(file.id).blob()),
+          url: file.id,
         })),
     );
     if (!concat) files.forEach(({ url }) => URL.revokeObjectURL(url));
@@ -93,6 +96,12 @@ const Image: React.FC = () => {
           value={query}
           onChange={setQuery}
           onEnter={() => search()}
+          disabled={disableSearch}
+          iconRight={
+            disableSearch ? (
+              <span className='loading loading-spinner w-4 h-4' />
+            ) : null
+          }
           label='Search'
           type='search'
           placeholder='YYYY-MM-DD or segments. ", " = or.'
@@ -108,7 +117,11 @@ const Image: React.FC = () => {
             label='Order'
           />
         </div>
-        <button className='btn btn-info normal-case' onClick={() => search()}>
+        <button
+          className='btn btn-info normal-case'
+          onClick={() => search()}
+          disabled={disableSearch}
+        >
           Search
         </button>
       </div>
@@ -134,6 +147,37 @@ const Image: React.FC = () => {
                   alt={date.date}
                   className='h-56 rounded-md cursor-pointer'
                   onClick={() => setMediaDialog({ open: true, index: i })}
+                  onLoad={() => {
+                    const newFiles = Array.from(
+                      document.querySelectorAll('table img'),
+                    ).map(({ src, alt }: any) => ({ date: alt, url: src }));
+                    if (newFiles.find(({ url }) => !url.includes('blob:'))) {
+                      return;
+                    }
+                    setFiles(newFiles);
+                    setDisableSearch(false);
+                  }}
+                  onError={async (e) => {
+                    let retries = 0;
+                    while (retries < 3) {
+                      try {
+                        e.currentTarget.src = URL.createObjectURL(
+                          await getFile(
+                            e.currentTarget.src.replace(
+                              location.href.slice(0, location.href.length - 2),
+                              '',
+                            ),
+                          ).blob(),
+                        );
+                        retries = 9;
+                      } catch {
+                        retries++;
+                      }
+                    }
+                    if (retries !== 9) {
+                      error('One of the images could not load');
+                    }
+                  }}
                 />
               </div>
             ),
