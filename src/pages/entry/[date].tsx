@@ -111,6 +111,7 @@ const Entry: React.FC = () => {
     if (!date || !user.email.value) return;
     setText('');
     setGallery([]);
+    let mounted = true;
 
     (async () => {
       const files = await searchFiles([{ name: date }]);
@@ -133,18 +134,21 @@ const Entry: React.FC = () => {
         setHtmlId(htmlFile.id);
         const html = await getFile(htmlFile.id).text();
         if (!html) return;
+        if (!mounted) return;
         setText(html);
 
         const imagesInHtml = files.filter(
           ({ mimeType }) =>
             !mimeType.includes('text/') && mimeType !== folderMimeType,
         );
-        const urls = await Promise.all(
-          imagesInHtml.map(async ({ id }) => ({
-            id,
-            url: URL.createObjectURL(await getFile(id).blob()),
-          })),
+        const blobs = await Promise.all(
+          imagesInHtml.map(({ id }) => getFile(id).blob()),
         );
+        if (!mounted) return;
+        const urls = imagesInHtml.map(({ id }, i) => ({
+          id,
+          url: URL.createObjectURL(blobs[i]),
+        }));
         if (location.pathname.split('/')[2] !== date) {
           urls.forEach(({ url }) => URL.revokeObjectURL(url));
           return;
@@ -166,6 +170,7 @@ const Entry: React.FC = () => {
         if (!items) return;
         const photos = await getPhotos(items.split('\n'));
         if (!photos?.length) return;
+        if (!mounted) return;
         setGallery(
           photos.map(({ id, baseUrl, mediaMetadata, mimeType }: any) => ({
             id,
@@ -180,6 +185,7 @@ const Entry: React.FC = () => {
     })();
 
     return () => {
+      mounted = false;
       gallery.forEach(({ url }) => URL.revokeObjectURL(url));
       text.match(/blob:[^'"]+/g)?.forEach(URL.revokeObjectURL);
     };
