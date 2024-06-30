@@ -1,7 +1,7 @@
 import { searchPhotos } from '@/helpers/photos';
 import { Input, Modal, dateInput, wordDate } from '@richardx/components';
 import React, { useEffect, useState } from 'react';
-import { BsCheck } from 'react-icons/bs';
+import { BsCheck, BsXLg } from 'react-icons/bs';
 import InfiniteScroll from 'react-infinite-scroller';
 
 export interface MediaFile {
@@ -184,6 +184,8 @@ const PhotoSelect: React.FC<{
           type='date'
           max={dateInput(new Date())}
           label='Date'
+          iconRight={<BsXLg onClick={() => setDate('')} />}
+          iconRightClickable
         />
         {displayPhotos()}
         <p className='text-center mt-4 text-lg font-medium'>
